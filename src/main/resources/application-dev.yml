@@ -1,0 +1,25 @@
+spring:
+  profiles: dev
+  # H2内存数据库配置（无需安装，开发时自动创建表）
+  datasource:
+    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+  # JPA配置（自动创建表结构，开发时方便）
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    properties:
+      hibernate:
+        show_sql: true
+        format_sql: true
+  # H2控制台（可通过 http://localhost:8080/h2-console 访问数据库）
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+
+# 服务器端口（开发时用8080，避免端口冲突）
+server:
+  port: 8080
