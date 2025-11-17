@@ -1,25 +1,50 @@
 spring:
-  profiles: dev
-  # H2内存数据库配置（无需安装，开发时自动创建表）
+  profiles: dev  # 开发环境标识
+  # H2内存数据库配置（迭代0专用，无需安装，方便测试）
   datasource:
-    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
-    username: sa
-    password:
+    url: jdbc:h2:mem:alaya_course_db;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE  # 库名改为和项目相关的alaya_course_db，更直观
+    username: sa  # H2默认用户名
+    password:     # 默认无密码
     driver-class-name: org.h2.Driver
-  # JPA配置（自动创建表结构，开发时方便）
+
+  # JPA配置（自动根据实体类创建表结构）
   jpa:
     hibernate:
-      ddl-auto: create-drop
+      ddl-auto: update  # 建议从create-drop改为update：启动时更新表结构（保留数据），更适合迭代开发
     properties:
       hibernate:
-        show_sql: true
-        format_sql: true
-  # H2控制台（可通过 http://localhost:8080/h2-console 访问数据库）
+        show_sql: true  # 控制台打印SQL，方便调试
+        format_sql: true  # SQL格式化，可读性更好
+        dialect: org.hibernate.dialect.H2Dialect  # 显式指定H2方言（可选，但更规范）
+  # H2控制台配置（访问地址：http://localhost:8080/h2-console）
   h2:
     console:
-      enabled: true
-      path: /h2-console
+      enabled: true  # 开启控制台
+      path: /h2-console  # 访问路径
+      settings:
+        web-allow-others: false  # 只允许本地访问，更安全
 
-# 服务器端口（开发时用8080，避免端口冲突）
+# 服务器端口
 server:
   port: 8080
+#spring:
+#  profiles: dev
+#  datasource:
+#    # 文件数据库：数据存到项目根目录的h2-data.mv.db文件中
+#    url: jdbc:h2:file:./h2-data;DB_CLOSE_ON_EXIT=FALSE
+#    username: sa
+#    password:
+#    driver-class-name: org.h2.Driver
+#  jpa:
+#    hibernate:
+#      ddl-auto: update
+#    properties:
+#      hibernate:
+#        show_sql: true
+#  h2:
+#    console:
+#      enabled: true
+#      path: /h2-console
+#
+#server:
+#  port: 8080
