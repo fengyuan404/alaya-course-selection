@@ -14,6 +14,12 @@ import java.util.List;
 @Data
 @Entity
 @Table(name = "users")
+//@Table(
+//        uniqueConstraints = {
+//                @UniqueConstraint(columnNames = "username"), // 用户名唯一
+//                @UniqueConstraint(columnNames = "email")     // 邮箱唯一
+//        }
+//)
 public class User implements UserDetails {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

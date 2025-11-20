@@ -41,4 +41,18 @@ public class UserServiceTest {
         assertTrue(passwordEncoder.matches("Stu123456", savedUser.getPassword()));
         assertEquals(UserRole.STUDENT, savedUser.getRole());
     }
+    // UserServiceTest.java
+    @Test
+    public void testPasswordEncoderStrength() {
+        String rawPassword = "Test123456";
+        String encodedPassword = passwordEncoder.encode(rawPassword);
+
+        // BCrypt加密串格式：$2a$[强度]$[盐值+密文]，比如$2a$12$xxxxxxxx...
+        // 截取强度部分（第4-5位）
+        String strengthStr = encodedPassword.split("\\$")[2];
+        int strength = Integer.parseInt(strengthStr);
+
+        // 断言强度≥11（满足10+）
+        assertTrue(strength >= 11);
+    }
 }

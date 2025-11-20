@@ -13,15 +13,19 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.header.writers.ContentSecurityPolicyHeaderWriter;
 import org.springframework.security.web.header.writers.XXssProtectionHeaderWriter;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
 
+
+
     // 密码加密器
     @Bean
     public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
+        return new BCryptPasswordEncoder(12);
     }
 
     @Bean
@@ -53,7 +57,7 @@ public class SecurityConfig {
                 )
                 // 4. 接口权限控制（合并重复配置，只保留一次）
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/register", "/api/auth/login", "/h2-console/**").permitAll()
+                        .requestMatchers("/api/auth/register", "/api/auth/login", "/api/auth/logout", "/h2-console/**").permitAll()
                         .requestMatchers("/api/student/**").hasRole("STUDENT")
                         .requestMatchers("/api/teacher/**").hasRole("TEACHER")
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
@@ -68,6 +72,12 @@ public class SecurityConfig {
                         .permitAll()
                 );
 
+
         return http.build();
     }
+    @Bean
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
+        return authenticationConfiguration.getAuthenticationManager();
+    }
+
 }
