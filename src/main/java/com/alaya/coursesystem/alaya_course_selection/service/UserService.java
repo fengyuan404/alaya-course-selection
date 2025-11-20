@@ -3,8 +3,10 @@ package com.alaya.coursesystem.alaya_course_selection.service;
 
 import com.alaya.coursesystem.alaya_course_selection.entity.Role;
 import com.alaya.coursesystem.alaya_course_selection.entity.User;
+import com.alaya.coursesystem.alaya_course_selection.entity.UserRole;
 import com.alaya.coursesystem.alaya_course_selection.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -17,8 +19,19 @@ public class UserService implements UserDetailsService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
+
+    // 确保存在这个save方法（参数是User，返回User）
+    public User save(User user) {
+        // （可选）如果是更新用户，不需要重复加密密码（避免覆盖原加密密码）
+        // 仅在新建用户时加密，更新时跳过
+        if (user.getId() == null) { // 新建用户（无ID）
+            user.setPassword(passwordEncoder.encode(user.getPassword()));
+        }
+        return userRepository.save(user);
+    }
+
     // 用户注册
-    public User register(String username, String password, String email, Role role) {
+    public User register(String username, String password, String email, UserRole role) {
         // 校验用户名和邮箱是否已存在
         if (userRepository.existsByUsername(username)) {
             throw new RuntimeException("用户名已存在：" + username);
@@ -33,6 +46,8 @@ public class UserService implements UserDetailsService {
         user.setEmail(email);
         user.setRole(role);
         return userRepository.save(user);
+
+
     }
 
     // Spring Security登录时调用：根据用户名查询用户
