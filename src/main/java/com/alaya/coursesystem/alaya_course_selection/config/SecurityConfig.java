@@ -29,8 +29,8 @@ public class SecurityConfig {
         http
                 // 1. CSRF防护（测试环境临时关闭，正式环境启用）
                 .csrf(csrf -> csrf
-                                .disable()// 测试环境关闭；正式环境替换为下面这行
-                        //.csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
+                               .disable()// 测试环境关闭；正式环境替换为下面这行
+                       // .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
                 )
                 // 2. 会话安全配置
                 .sessionManagement(session -> session

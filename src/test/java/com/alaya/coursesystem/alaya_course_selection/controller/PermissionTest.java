@@ -1,4 +1,4 @@
-// 包路径：com.alaya.coursesystem.alaya_course_selection.controller
+// 修正后的PermissionTest.java
 package com.alaya.coursesystem.alaya_course_selection.controller;
 
 import org.junit.jupiter.api.Test;
@@ -18,19 +18,19 @@ public class PermissionTest {
     @Autowired
     private MockMvc mockMvc;
 
-    // 测试学生无法访问教师接口
+    // 测试学生访问教师接口：预期403（Forbidden）
     @Test
-    @WithMockUser(roles = "STUDENT")
+    @WithMockUser(username = "student1", roles = "STUDENT") // 补充用户名，避免默认值
     public void testStudentAccessTeacherApi() throws Exception {
         mockMvc.perform(get("/api/teacher/courses"))
-                .andExpect(status().isForbidden()); // 断言403权限拒绝
+                .andExpect(status().isForbidden()); // 核心：学生无权限，返回403
     }
 
-    // 测试教师可以访问自己的接口
+    // 测试教师访问教师接口：预期200（Ok）
     @Test
-    @WithMockUser(roles = "TEACHER")
+    @WithMockUser(username = "teacher1", roles = "TEACHER") // 补充用户名
     public void testTeacherAccessTeacherApi() throws Exception {
         mockMvc.perform(get("/api/teacher/courses"))
-                .andExpect(status().isOk()); // 断言200成功
+                .andExpect(status().isOk()); // 接口存在且有权限，返回200
     }
 }
