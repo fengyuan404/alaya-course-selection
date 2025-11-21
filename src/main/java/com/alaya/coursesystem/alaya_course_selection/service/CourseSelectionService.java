@@ -43,6 +43,14 @@ public class CourseSelectionService {
             throw new RuntimeException("课程容量不足：" + course.getName());
         }
 
+        // 新增：检测时间冲突
+        List<CourseSelection> existingCourses = selectionRepository.findByUser(currentUser);
+        for (CourseSelection selection : existingCourses) {
+            if (selection.getCourse().getSchedule().equals(course.getSchedule())) {
+                throw new RuntimeException("选课时间冲突：" + selection.getCourse().getName() + " 与 " + course.getName());
+            }
+        }
+
         // 执行选课
         CourseSelection selection = new CourseSelection();
         selection.setUser(currentUser);

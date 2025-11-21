@@ -1,20 +1,20 @@
-// 包路径：com.alaya.coursesystem.alaya_course_selection.repository
 package com.alaya.coursesystem.alaya_course_selection.repository;
 
 import com.alaya.coursesystem.alaya_course_selection.entity.Course;
 import com.alaya.coursesystem.alaya_course_selection.entity.CourseSelection;
 import com.alaya.coursesystem.alaya_course_selection.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
 import java.util.List;
 import java.util.Optional;
 
+@Repository
 public interface CourseSelectionRepository extends JpaRepository<CourseSelection, Long> {
-    // 查询用户已选课程
-    List<CourseSelection> findByUser(User user);
-
-    // 查询课程的选课记录（用于统计人数）
-    List<CourseSelection> findByCourse(Course course);
-
-    // 检查用户是否已选该课程（避免重复选课）
+    // 根据用户和课程查询选课记录
     Optional<CourseSelection> findByUserAndCourse(User user, Course course);
+    // 根据用户查询所有选课记录
+    List<CourseSelection> findByUser(User user);
+    // 根据课程查询所有选课记录
+    List<CourseSelection> findByCourse(Course course);
 }
