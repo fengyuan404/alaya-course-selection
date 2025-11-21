@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>课程列表</title>
+</head>
+<body>
+<h1>课程列表</h1>
+<!-- 搜索表单 -->
+<form th:action="@{/api/student/courses/search}" method="get">
+    <input type="text" name="keyword" placeholder="课程/教师名称">
+    <select name="credits">
+        <option value="">请选择学分</option>
+        <option value="1">1学分</option>
+        <option value="2">2学分</option>
+    </select>
+    <button type="submit">搜索</button>
+</form>
+
+<!-- 课程列表 -->
+<table border="1">
+    <tr>
+        <th>课程名称</th>
+        <th>授课教师</th>
+        <th>学分</th>
+        <th>上课时间</th>
+        <th>上课地点</th>
+        <th>操作</th>
+    </tr>
+    <tr th:each="course : ${coursePage.content}">
+        <td th:text="${course.name}"></td>
+        <td th:text="${course.teacher.username}"></td>
+        <td th:text="${course.credits}"></td>
+        <td th:text="${course.schedule}"></td>
+        <td th:text="${course.location}"></td>
+        <td>
+            <a th:href="@{/api/student/courses/{id}(id=${course.id})}">详情</a>
+            <a th:href="@{/api/student/selection/select/{courseId}(courseId=${course.id})}">选课</a>
+        </td>
+    </tr>
+</table>
+
+<!-- 分页控件 -->
+<div>
+    <a th:href="@{/api/student/courses(pageNum=${coursePage.number}, pageSize=10)}"
+       th:unless="${coursePage.first}">上一页</a>
+    <span th:text="'第 ' + ${coursePage.number + 1} + ' 页，共 ' + ${coursePage.totalPages} + ' 页'"></span>
+    <a th:href="@{/api/student/courses(pageNum=${coursePage.number + 2}, pageSize=10)}"
+       th:unless="${coursePage.last}">下一页</a>
+</div>
+</body>
+</html>
