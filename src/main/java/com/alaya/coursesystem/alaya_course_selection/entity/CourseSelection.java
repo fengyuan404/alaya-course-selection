@@ -17,6 +17,8 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 //选课记录实体
 public class CourseSelection {
+
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -28,7 +30,9 @@ public class CourseSelection {
     @ManyToOne // 多对一：多个选课记录对应一个课程
     @JoinColumn(name = "course_id", nullable = false)
     private Course course;
-
+    private String status; // 状态：SELECTED（已选）/WITHDRAWN（已退课）
+    private LocalDateTime selectTime; // 选课时间
     @CreationTimestamp
     private LocalDateTime selectedAt; // 选课时间
+
 }

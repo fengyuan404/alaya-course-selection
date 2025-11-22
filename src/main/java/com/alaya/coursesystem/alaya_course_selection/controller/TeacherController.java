@@ -2,7 +2,7 @@ package com.alaya.coursesystem.alaya_course_selection.controller;
 
 import com.alaya.coursesystem.alaya_course_selection.entity.Course;
 import com.alaya.coursesystem.alaya_course_selection.entity.User;
-import com.alaya.coursesystem.alaya_course_selection.exception.GlobalExceptionHandler.ApiResponse;
+import com.alaya.coursesystem.alaya_course_selection.exception.UnifiedExceptionHandler.ApiResponse;
 import com.alaya.coursesystem.alaya_course_selection.service.CourseService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
