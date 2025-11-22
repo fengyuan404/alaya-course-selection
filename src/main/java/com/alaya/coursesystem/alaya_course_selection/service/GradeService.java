@@ -102,4 +102,39 @@ public class GradeService {
 
         return result;
     }
+
+    /**
+     * 学生按学期查询成绩
+     * @param studentId 学生ID
+     * @param semester 学期（如"2024-2025-1"）
+     * @return 该学期的成绩列表
+     */
+    public List<Grade> getStudentGradesBySemester(Long studentId, String semester) {
+        // 1. 校验学生存在
+        User student = userRepository.findById(studentId)
+                .orElseThrow(() -> new UnifiedExceptionHandler.BusinessException("学生不存在"));
+        // 2. 关联选课记录的学期筛选
+        return gradeRepository.findBySelection_User_IdAndSelection_Semester(studentId, semester);
+    }
+
+    /**
+     * 教师按学期查询课程成绩
+     * @param courseId 课程ID
+     * @param teacherId 教师ID
+     * @param semester 学期
+     * @return 该学期该课程的成绩列表
+     */
+    public List<Grade> getCourseGradesBySemester(Long courseId, Long teacherId, String semester) {
+        // 1. 权限校验（教师只能查自己的课程）
+        Course course = courseRepository.findById(courseId)
+                .orElseThrow(() -> new UnifiedExceptionHandler.BusinessException("课程不存在"));
+        if (!course.getTeacher().getId().equals(teacherId)) {
+            throw new UnifiedExceptionHandler.BusinessException("无权操作其他教师的课程");
+        }
+        // 2. 按课程+学期筛选
+        return gradeRepository.findBySelection_Course_IdAndSelection_Semester(courseId, semester);
+    }
+
+
+
 }

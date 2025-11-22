@@ -19,4 +19,10 @@ public interface GradeRepository extends JpaRepository<Grade, Long> {
 
     // 根据课程查询所有成绩
     List<Grade> findBySelection_Course(Course course);
+
+        // 学生按学期查成绩
+        List<Grade> findBySelection_User_IdAndSelection_Semester(Long studentId, String semester);
+        // 教师按课程+学期查成绩
+        List<Grade> findBySelection_Course_IdAndSelection_Semester(Long courseId, String semester);
+
 }

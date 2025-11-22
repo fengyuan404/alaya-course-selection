@@ -1,5 +1,6 @@
 package com.alaya.coursesystem.alaya_course_selection.controller;
 
+import com.alaya.coursesystem.alaya_course_selection.common.Result;
 import com.alaya.coursesystem.alaya_course_selection.entity.Grade;
 import com.alaya.coursesystem.alaya_course_selection.entity.User;
 import com.alaya.coursesystem.alaya_course_selection.exception.UnifiedExceptionHandler.ApiResponse;
@@ -77,5 +78,25 @@ public class GradeController {
         logService.recordLog(teacher.getUsername(), "成绩分析",
                 "分析课程成绩: 课程ID=" + courseId);
         return ResponseEntity.ok(ApiResponse.success(analysis));
+    }
+
+    @GetMapping("/student/semester")
+    public Result<List<Grade>> getStudentGradesBySemester(
+            @RequestParam Long studentId,
+            @RequestParam String semester) {
+        List<Grade> grades = gradeService.getStudentGradesBySemester(studentId, semester);
+        return Result.success(grades);
+    }
+
+    /**
+     * 教师按学期查询课程成绩
+     */
+    @GetMapping("/teacher/course/semester")
+    public Result<List<Grade>> getCourseGradesBySemester(
+            @RequestParam Long courseId,
+            @RequestParam Long teacherId,
+            @RequestParam String semester) {
+        List<Grade> grades = gradeService.getCourseGradesBySemester(courseId, teacherId, semester);
+        return Result.success(grades);
     }
 }

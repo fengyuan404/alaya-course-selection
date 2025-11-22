@@ -49,7 +49,6 @@ public class GradeServiceTest {
     /**
      * 初始化测试数据：创建唯一的教师/学生/课程/选课记录
      */
-
     @BeforeEach
     void initTestData() {
         // 1. 创建测试教师（生成唯一email）
@@ -79,12 +78,12 @@ public class GradeServiceTest {
         testCourse.setSchedule("周一10:00-12:00"); // 上课时间
         testCourse = courseRepository.save(testCourse);
 
-        // 4. 创建测试选课记录
+        // 4. 创建测试选课记录（核心修改：添加semester字段赋值）
         testSelection = new CourseSelection();
         testSelection.setCourse(testCourse);
         testSelection.setUser(testStudent);
-        //testSelection.setSelectTime(java.time.LocalDateTime.now()); // 已修正为selectTime
         testSelection.setSelectTime(LocalDateTime.now());
+        testSelection.setSemester("2024-2025-1"); // 新增：解决semester非空约束
         testSelection = courseSelectionRepository.save(testSelection);
     }
 
@@ -218,8 +217,8 @@ public class GradeServiceTest {
         CourseSelection selection2 = new CourseSelection();
         selection2.setCourse(testCourse);
         selection2.setUser(student2);
-       // selection2.setSelectTime(java.time.LocalDateTime.now());
         selection2.setSelectTime(LocalDateTime.now());
+        selection2.setSemester("2024-2025-1"); // 新增：给第二个选课记录也加semester
         selection2 = courseSelectionRepository.save(selection2);
         gradeService.saveGrade(selection2.getId(), new BigDecimal("95"), Grade.GradeLevel.A, "评语2", testTeacher);
 
@@ -231,5 +230,71 @@ public class GradeServiceTest {
         Map<Grade.GradeLevel, Long> levelDistribution = (Map<Grade.GradeLevel, Long>) analysis.get("levelDistribution");
         assertEquals(1, levelDistribution.get(Grade.GradeLevel.A));
         assertEquals(1, levelDistribution.get(Grade.GradeLevel.B));
+    }
+
+    // ========== 新增按学期查询测试方法 ==========
+    @Test
+    void testGetStudentGradesBySemester() {
+        // 1. 先录入测试成绩
+        Grade savedGrade = gradeService.saveGrade(
+                testSelection.getId(),
+                BigDecimal.valueOf(85),
+                Grade.GradeLevel.B,
+                "学期筛选测试",
+                testTeacher
+        );
+        assertNotNull(savedGrade);
+
+        // 2. 按正确学期查询（应查到数据）
+        List<Grade> grades = gradeService.getStudentGradesBySemester(
+                testStudent.getId(),
+                "2024-2025-1"
+        );
+        assertEquals(1, grades.size());
+        assertEquals(BigDecimal.valueOf(85), grades.get(0).getScore());
+
+        // 3. 按错误学期查询（应无数据）
+        List<Grade> emptyGrades = gradeService.getStudentGradesBySemester(
+                testStudent.getId(),
+                "2024-2025-2"
+        );
+        assertEquals(0, emptyGrades.size());
+    }
+
+    @Test
+    void testGetCourseGradesBySemester() {
+        // 1. 录入测试成绩
+        gradeService.saveGrade(
+                testSelection.getId(),
+                BigDecimal.valueOf(90),
+                Grade.GradeLevel.A,
+                "教师学期筛选测试",
+                testTeacher
+        );
+
+        // 2. 按正确学期查询
+        List<Grade> grades = gradeService.getCourseGradesBySemester(
+                testCourse.getId(),
+                testTeacher.getId(),
+                "2024-2025-1"
+        );
+        assertEquals(1, grades.size());
+
+        // 3. 按错误学期查询
+        List<Grade> emptyGrades = gradeService.getCourseGradesBySemester(
+                testCourse.getId(),
+                testTeacher.getId(),
+                "2024-2025-2"
+        );
+        assertEquals(0, emptyGrades.size());
+
+        // 4. 测试权限校验（用错误教师ID查询）
+        assertThrows(UnifiedExceptionHandler.BusinessException.class, () -> {
+            gradeService.getCourseGradesBySemester(
+                    testCourse.getId(),
+                    9999L, // 不存在的教师ID
+                    "2024-2025-1"
+            );
+        });
     }
 }

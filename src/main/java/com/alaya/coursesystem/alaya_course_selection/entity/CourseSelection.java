@@ -27,6 +27,11 @@ public class CourseSelection {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
+    @Column(nullable = false)
+    private String semester; // 格式示例："2024-2025-1"（2024-2025学年第一学期）
+
+// 补充getter/setter
+
     @ManyToOne // 多对一：多个选课记录对应一个课程
     @JoinColumn(name = "course_id", nullable = false)
     private Course course;
