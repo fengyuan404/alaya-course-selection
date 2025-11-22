@@ -1,0 +1,48 @@
+<!-- 路径：src/main/resources/templates/teacher/course-create.html -->
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>创建课程</title>
+    <style>
+        .error { color: red; }
+        .form-group { margin: 10px 0; }
+    </style>
+</head>
+<body>
+<h1>创建新课程</h1>
+<a th:href="@{/teacher/courses}">返回课程管理</a>
+
+<!-- 错误提示 -->
+<div th:if="${error}" class="error" th:text="${error}"></div>
+
+<!-- 创建课程表单（POST提交） -->
+<form th:action="@{/teacher/courses/create}" method="post">
+    <div class="form-group">
+        <label>课程名称：*</label>
+        <input type="text" name="name" required placeholder="请输入课程名称（最长50字）">
+    </div>
+    <div class="form-group">
+        <label>学分：*</label>
+        <input type="number" name="credits" min="1" max="8" required placeholder="1-8分">
+    </div>
+    <div class="form-group">
+        <label>上课时间：*</label>
+        <input type="text" name="schedule" required placeholder="例：周一 1-2节">
+    </div>
+    <div class="form-group">
+        <label>上课地点：*</label>
+        <input type="text" name="location" required placeholder="例：教学楼A101">
+    </div>
+    <div class="form-group">
+        <label>课程容量：*</label>
+        <input type="number" name="capacity" min="1" max="200" required placeholder="1-200人">
+    </div>
+    <div class="form-group">
+        <label>课程描述：</label>
+        <textarea name="description" rows="5" cols="50" placeholder="可选，最长500字"></textarea>
+    </div>
+    <button type="submit">提交创建</button>
+</form>
+</body>
+</html>

@@ -1,0 +1,49 @@
+<!-- 路径：src/main/resources/templates/teacher/course-manage.html -->
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>教师课程管理</title>
+    <style>
+        .success { color: green; }
+        .error { color: red; }
+    </style>
+</head>
+<body>
+<h1>我的课程管理</h1>
+<a th:href="@{/teacher/courses/create}">创建新课程</a>
+
+<!-- 提示信息 -->
+<div th:if="${message}" class="success" th:text="${message}"></div>
+<div th:if="${error}" class="error" th:text="${error}"></div>
+
+<!-- 课程列表 -->
+<table border="1" cellpadding="5" cellspacing="0">
+    <tr>
+        <th>课程ID</th>
+        <th>课程名称</th>
+        <th>学分</th>
+        <th>上课时间</th>
+        <th>上课地点</th>
+        <th>容量</th>
+        <th>操作</th>
+    </tr>
+    <tr th:each="course : ${courses}">
+        <td th:text="${course.id}"></td>
+        <td th:text="${course.name}"></td>
+        <td th:text="${course.credits}"></td>
+        <td th:text="${course.schedule}"></td>
+        <td th:text="${course.location}"></td>
+        <td th:text="${course.capacity}"></td>
+        <td>
+            <a th:href="@{/teacher/courses/edit/{id}(id=${course.id})}">编辑</a>
+            <a th:href="@{/teacher/courses/delete/{id}(id=${course.id})}"
+               onclick="return confirm('确认删除该课程吗？删除后无法恢复！')">删除</a>
+        </td>
+    </tr>
+    <tr th:if="${courses.isEmpty()}">
+        <td colspan="7" align="center">暂无创建的课程</td>
+    </tr>
+</table>
+</body>
+</html>

@@ -1,51 +1,78 @@
+<!-- 路径：src/main/resources/templates/student/course-list.html -->
 <!DOCTYPE html>
 <html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <title>课程列表</title>
+    <style>
+        .success { color: green; }
+        .error { color: red; }
+    </style>
 </head>
 <body>
-<h1>课程列表</h1>
-<!-- 搜索表单 -->
-<form th:action="@{/api/student/courses/search}" method="get">
-    <input type="text" name="keyword" placeholder="课程/教师名称">
-    <select name="credits">
-        <option value="">请选择学分</option>
-        <option value="1">1学分</option>
-        <option value="2">2学分</option>
-    </select>
+<h1>学生课程列表</h1>
+
+<!-- 提示信息（选课/搜索结果） -->
+<div th:if="${message}" class="success" th:text="${message}"></div>
+<div th:if="${error}" class="error" th:text="${error}"></div>
+
+<!-- 搜索表单（POST改为GET，适配页面跳转） -->
+<form th:action="@{/student/courses/search}" method="get">
+    <div>
+        <label>关键词：</label>
+        <input type="text" name="keyword" th:value="${keyword}" placeholder="课程/教师名称">
+    </div>
+    <div>
+        <label>学分：</label>
+        <select name="credits" th:value="${credits}">
+            <option value="">请选择学分</option>
+            <option value="1">1学分</option>
+            <option value="2">2学分</option>
+            <option value="3">3学分</option>
+            <option value="4">4学分</option>
+        </select>
+    </div>
     <button type="submit">搜索</button>
+    <a th:href="@{/student/courses}">重置</a>
 </form>
 
 <!-- 课程列表 -->
-<table border="1">
+<table border="1" cellpadding="5" cellspacing="0">
     <tr>
+        <th>课程ID</th>
         <th>课程名称</th>
         <th>授课教师</th>
         <th>学分</th>
         <th>上课时间</th>
         <th>上课地点</th>
+        <th>容量</th>
         <th>操作</th>
     </tr>
     <tr th:each="course : ${coursePage.content}">
+        <td th:text="${course.id}"></td>
         <td th:text="${course.name}"></td>
         <td th:text="${course.teacher.username}"></td>
         <td th:text="${course.credits}"></td>
         <td th:text="${course.schedule}"></td>
         <td th:text="${course.location}"></td>
+        <td th:text="${course.capacity}"></td>
         <td>
-            <a th:href="@{/api/student/courses/{id}(id=${course.id})}">详情</a>
-            <a th:href="@{/api/student/selection/select/{courseId}(courseId=${course.id})}">选课</a>
+            <a th:href="@{/student/courses/detail(id=${course.id})}">详情</a>
+            <a th:href="@{/student/selection/select(courseId=${course.id})}"
+               onclick="return confirm('确认选该课程吗？')">选课</a>
         </td>
+    </tr>
+    <tr th:if="${coursePage.content.isEmpty()}">
+        <td colspan="8" align="center">暂无课程数据</td>
     </tr>
 </table>
 
-<!-- 分页控件 -->
-<div>
-    <a th:href="@{/api/student/courses(pageNum=${coursePage.number}, pageSize=10)}"
+<!-- 分页控件（可点击跳转） -->
+<div style="margin-top: 20px;">
+    <a th:href="@{/student/courses(pageNum=${coursePage.number}, pageSize=10)}"
        th:unless="${coursePage.first}">上一页</a>
-    <span th:text="'第 ' + ${coursePage.number + 1} + ' 页，共 ' + ${coursePage.totalPages} + ' 页'"></span>
-    <a th:href="@{/api/student/courses(pageNum=${coursePage.number + 2}, pageSize=10)}"
+    <span th:text="'第 ' + ${coursePage.number + 1} + ' 页 / 共 ' + ${coursePage.totalPages} + ' 页'"></span>
+    <a th:href="@{/student/courses(pageNum=${coursePage.number + 2}, pageSize=10)}"
        th:unless="${coursePage.last}">下一页</a>
 </div>
 </body>

@@ -1,7 +1,19 @@
+# 全局通用配置
 server:
   port: 8080
 
+# 指定默认激活的环境（默认用H2，想切MySQL时改为mysql）
 spring:
+  profiles:
+    #active: h2
+    active: mysql
+
+---
+# H2 环境配置（保留原有）
+spring:
+  config:
+    activate:
+      on-profile: h2
   datasource:
     url: jdbc:h2:mem:testdb
     username: sa
@@ -11,3 +23,24 @@ spring:
     console:
       enabled: true
       path: /h2-console
+
+---
+# MySQL 环境配置（新增）
+spring:
+  config:
+    activate:
+      on-profile: mysql
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/alaya_course_db?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+    username: root
+    password: 123456  # 你的MySQL密码
+  # 可选：JPA配置（如果用JPA/MyBatis可加）
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+    database-platform: org.hibernate.dialect.MySQL8Dialect
