@@ -8,6 +8,8 @@ import com.alaya.coursesystem.alaya_course_selection.repository.CourseRepository
 import com.alaya.coursesystem.alaya_course_selection.repository.CourseSelectionRepository;
 import com.alaya.coursesystem.alaya_course_selection.vo.PageResponseVO;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
@@ -25,6 +27,7 @@ public class CourseService {
     private final CourseSelectionRepository selectionRepository;
 
     // 优化：使用分页工具类替换原有分页方法
+    @Cacheable(value = "courseList", key = "'all_' + #pageRequest.pageNum + '_' + #pageRequest.pageSize")
     public PageResponseVO<Course> getAllCoursesByPage(PageRequestDTO pageRequest) {
         // 按id降序排序（保持原有排序逻辑）
         Sort sort = Sort.by(Sort.Direction.DESC, "id");
@@ -33,6 +36,7 @@ public class CourseService {
     }
 
     // 优化：使用分页工具类处理搜索分页
+    @Cacheable(value = "courseList", key = "'search_' + #keyword + '_' + #credits + '_' + #pageRequest.pageNum + '_' + #pageRequest.pageSize")
     public PageResponseVO<Course> searchCourses(String keyword, Integer credits, PageRequestDTO pageRequest) {
         Sort sort = Sort.by(Sort.Direction.DESC, "id"); // 保持原有排序逻辑
 
@@ -63,10 +67,12 @@ public class CourseService {
         return courseRepository.findAll();
     }
 
+    @CacheEvict(value = "courseList", allEntries = true)
     public Course addCourse(Course course) {
         return courseRepository.save(course);
     }
 
+    @Cacheable(value = "courseList", key = "#id")
     public Course getCourseById(Long id) {
         // 优化：使用统一异常处理器替换RuntimeException
         return courseRepository.findById(id)
@@ -78,6 +84,7 @@ public class CourseService {
         return selectedCount < course.getCapacity();
     }
 
+    @CacheEvict(value = "courseList", allEntries = true)
     public void deleteCourse(Long id) {
         Course course = getCourseById(id);
         long selectedCount = selectionRepository.findByCourse(course).size();

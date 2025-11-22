@@ -1,0 +1,105 @@
+package com.alaya.coursesystem.alaya_course_selection.service;
+
+import com.alaya.coursesystem.alaya_course_selection.entity.Course;
+import com.alaya.coursesystem.alaya_course_selection.entity.Grade;
+import com.alaya.coursesystem.alaya_course_selection.entity.User;
+import com.alaya.coursesystem.alaya_course_selection.exception.UnifiedExceptionHandler;
+import com.alaya.coursesystem.alaya_course_selection.repository.CourseRepository;
+import com.alaya.coursesystem.alaya_course_selection.repository.CourseSelectionRepository;
+import com.alaya.coursesystem.alaya_course_selection.repository.GradeRepository;
+import com.alaya.coursesystem.alaya_course_selection.repository.UserRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.math.BigDecimal;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+@Service
+@RequiredArgsConstructor
+public class GradeService {
+
+    private final GradeRepository gradeRepository;
+    private final CourseSelectionRepository selectionRepository;
+    private final CourseRepository courseRepository;
+    private final UserRepository userRepository;
+
+    // 录入/修改成绩
+    @Transactional
+    @CacheEvict(value = {"studentGrades", "courseGrades"}, allEntries = true)
+    public Grade saveGrade(Long selectionId, BigDecimal score, Grade.GradeLevel level, String comment, User teacher) {
+        // 验证选课记录存在
+        var selection = selectionRepository.findById(selectionId)
+                .orElseThrow(() -> new UnifiedExceptionHandler.BusinessException("选课记录不存在"));
+
+        // 验证教师权限
+        if (!selection.getCourse().getTeacher().getId().equals(teacher.getId())) {
+            throw new UnifiedExceptionHandler.BusinessException("无权操作其他教师的课程成绩");
+        }
+
+        // 验证分数范围
+        if (score != null && (score.compareTo(BigDecimal.ZERO) < 0 || score.compareTo(new BigDecimal(100)) > 0)) {
+            throw new UnifiedExceptionHandler.BusinessException("分数必须在0-100之间");
+        }
+
+        // 查找或创建成绩记录
+        var grade = gradeRepository.findBySelectionId(selectionId).orElse(new Grade());
+        grade.setSelection(selection);
+        grade.setScore(score);
+        grade.setLevel(level);
+        grade.setComment(comment);
+
+        return gradeRepository.save(grade);
+    }
+
+    // 学生查询个人成绩
+    @Cacheable(value = "studentGrades", key = "#studentId")
+    public List<Grade> getStudentGrades(Long studentId) {
+        User student = userRepository.findById(studentId)
+                .orElseThrow(() -> new UnifiedExceptionHandler.BusinessException("学生不存在"));
+        return gradeRepository.findBySelection_UserOrderBySelection_Course_Name(student);
+    }
+
+    // 教师查询课程成绩
+    @Cacheable(value = "courseGrades", key = "#courseId")
+    public List<Grade> getCourseGrades(Long courseId, Long teacherId) {
+        Course course = courseRepository.findById(courseId)
+                .orElseThrow(() -> new UnifiedExceptionHandler.BusinessException("课程不存在"));
+
+        // 验证权限
+        if (!course.getTeacher().getId().equals(teacherId)) {
+            throw new UnifiedExceptionHandler.BusinessException("无权查看其他教师的课程成绩");
+        }
+
+        return gradeRepository.findBySelection_Course(course);
+    }
+
+    // 成绩统计分析
+    public Map<String, Object> analyzeCourseGrades(Long courseId, Long teacherId) {
+        List<Grade> grades = getCourseGrades(courseId, teacherId);
+
+        // 计算平均分
+        BigDecimal avgScore = grades.stream()
+                .filter(g -> g.getScore() != null)
+                .map(Grade::getScore)
+                .reduce(BigDecimal.ZERO, BigDecimal::add)
+                .divide(BigDecimal.valueOf(grades.size()), 2, BigDecimal.ROUND_HALF_UP);
+
+        // 统计等级分布
+        Map<Grade.GradeLevel, Long> levelDistribution = grades.stream()
+                .filter(g -> g.getLevel() != null)
+                .collect(Collectors.groupingBy(Grade::getLevel, Collectors.counting()));
+
+        // 组装结果
+        Map<String, Object> result = new java.util.HashMap<>();
+        result.put("totalStudents", grades.size());
+        result.put("averageScore", avgScore);
+        result.put("levelDistribution", levelDistribution);
+
+        return result;
+    }
+}

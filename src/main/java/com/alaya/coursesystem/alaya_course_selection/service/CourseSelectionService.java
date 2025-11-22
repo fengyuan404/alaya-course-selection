@@ -7,6 +7,8 @@ import com.alaya.coursesystem.alaya_course_selection.exception.UnifiedExceptionH
 import com.alaya.coursesystem.alaya_course_selection.repository.CourseRepository;
 import com.alaya.coursesystem.alaya_course_selection.repository.CourseSelectionRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -34,6 +36,7 @@ public class CourseSelectionService {
      * @return 选课记录
      */
     @Transactional(rollbackFor = Exception.class)
+    @CacheEvict(value = {"studentGrades", "courseGrades"}, allEntries = true)
     public CourseSelection selectCourse(Long courseId, Authentication auth) {
         // 1. 获取当前登录学生
         User student = (User) auth.getPrincipal();
@@ -104,6 +107,7 @@ public class CourseSelectionService {
      * @param auth 登录用户信息
      */
     @Transactional(rollbackFor = Exception.class)
+    @CacheEvict(value = {"studentGrades", "courseGrades"}, allEntries = true)
     public void withdrawCourse(Long selectionId, Authentication auth) {
         User student = (User) auth.getPrincipal();
 
@@ -134,6 +138,7 @@ public class CourseSelectionService {
      * @param auth 登录用户信息
      * @return 排序后的已选课程列表
      */
+    @Cacheable(value = "studentSchedule", key = "#auth.principal.id")
     public List<CourseSelection> getMySchedule(Authentication auth) {
         User student = (User) auth.getPrincipal();
         List<CourseSelection> myCourses = selectionRepository.findByUserAndStatus(student, "SELECTED");
