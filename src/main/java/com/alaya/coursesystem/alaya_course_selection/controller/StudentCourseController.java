@@ -4,6 +4,7 @@ package com.alaya.coursesystem.alaya_course_selection.controller;
 import com.alaya.coursesystem.alaya_course_selection.dto.PageRequestDTO;
 import com.alaya.coursesystem.alaya_course_selection.entity.Course;
 import com.alaya.coursesystem.alaya_course_selection.entity.CourseSelection;
+import com.alaya.coursesystem.alaya_course_selection.exception.UnifiedExceptionHandler;
 import com.alaya.coursesystem.alaya_course_selection.exception.UnifiedExceptionHandler.ApiResponse;
 import com.alaya.coursesystem.alaya_course_selection.service.CourseSelectionService;
 import com.alaya.coursesystem.alaya_course_selection.service.CourseService;
@@ -11,10 +12,13 @@ import com.alaya.coursesystem.alaya_course_selection.vo.PageResponseVO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.validation.Valid;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * 学生课程相关控制器（选课/退课/课程查询/搜索）
@@ -63,11 +67,24 @@ public class StudentCourseController {
     // ========== 分页接口修改（适配Service层） ==========
     // 1. 学生分页查询所有课程（基础列表）
     @GetMapping
-    public ResponseEntity<ApiResponse> getCoursesByPage(
-            // 替换原pageNum和pageSize为PageRequestDTO，保留默认值
-            @Valid PageRequestDTO pageRequest) {
+    public ResponseEntity<UnifiedExceptionHandler.ApiResponse> getCoursesByPage(
+            @RequestParam(defaultValue = "1") Integer pageNum,  // 单独接收分页参数
+            @RequestParam(defaultValue = "10") Integer pageSize,
+            @RequestParam(required = false) String keyword,     // 单独接收搜索参数
+            @RequestParam(required = false) Integer credits     // Integer允许空，避免转换失败
+    ) {
+        // 手动构建PageRequestDTO（避免绑定失败）
+        PageRequestDTO pageRequest = new PageRequestDTO();
+        pageRequest.setPageNum(pageNum);
+        pageRequest.setPageSize(pageSize);
+        pageRequest.setKeyword(keyword);
+        pageRequest.setCredits(credits);
+
+        // 2. 正常业务逻辑
+
+
         PageResponseVO<Course> coursePage = courseService.getAllCoursesByPage(pageRequest);
-        return ResponseEntity.ok(ApiResponse.success(coursePage));
+        return ResponseEntity.ok(UnifiedExceptionHandler.ApiResponse.success(coursePage));
     }
 
     // 2. 学生模糊搜索课程（支持名称/教师/学分筛选）

@@ -5,8 +5,8 @@ server:
 # 指定默认激活的环境（默认用H2，想切MySQL时改为mysql）
 spring:
   profiles:
-    active: h2
-    #active: mysql
+    #active: h2
+    active: mysql
 
 ---
 # H2 环境配置（保留原有）
@@ -52,3 +52,14 @@ spring:
         password: ''
         database: 0
         timeout: 3000ms
+
+        servlet:
+          session:
+            # 允许Cookie跨域传递（必须配置）
+            cookie:
+              same-site: None
+              # 开发环境关闭secure（https才需要true，http下开启会导致Cookie无法保存）
+              secure: false
+            # Session超时时间（可选，默认30分钟）
+            timeout: 1800s
+

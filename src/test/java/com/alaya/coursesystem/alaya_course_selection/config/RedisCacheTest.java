@@ -88,6 +88,7 @@ public class RedisCacheTest {
         testSelection.setCourse(testCourse);
         testSelection.setUser(testStudent);
         testSelection.setSelectTime(LocalDateTime.now());
+        testSelection.setSemester("2024-2025-1");
         testSelection = courseSelectionRepository.save(testSelection);
     }
 

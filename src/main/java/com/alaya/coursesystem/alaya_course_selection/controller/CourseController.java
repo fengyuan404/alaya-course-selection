@@ -25,7 +25,7 @@ public class CourseController {
 
     // 教师/管理员可添加课程
     @PostMapping
-    @PreAuthorize("hasRole('TEACHER') or hasRole('ADMIN')") // 角色权限控制
+   // @PreAuthorize("hasRole('TEACHER') or hasRole('ADMIN')") // 角色权限控制
     public ResponseEntity<Course> addCourse(@RequestBody Course course) {
         return ResponseEntity.ok(courseService.addCourse(course));
     }

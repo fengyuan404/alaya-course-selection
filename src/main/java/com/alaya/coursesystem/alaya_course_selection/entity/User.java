@@ -26,6 +26,7 @@ public class User implements UserDetails {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+
     @NotBlank(message = "用户名不能为空")
     @Column(unique = true, nullable = false)
     private String username;
@@ -72,6 +73,7 @@ public class User implements UserDetails {
         // 若需要适配UserRole的ROLE_前缀，可修改此处：
         // 方式1：用原Role拼接ROLE_（兼容原有逻辑）
         return Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + role.name()));
+
 
         // 方式2：若想使用UserRole的roleName，可手动映射（可选）
         /*

@@ -26,6 +26,12 @@ public class PermissionTest {
                 .andExpect(status().isForbidden()); // 核心：学生无权限，返回403
     }
 
+    @Test
+    public void testAnonymousAccessTeacherApi() throws Exception {
+        mockMvc.perform(get("/api/teacher/courses"))
+                .andExpect(status().isUnauthorized()); // 未登录返回401
+    }
+
     // 测试教师访问教师接口：预期200（Ok）
     @Test
     @WithMockUser(username = "teacher1", roles = "TEACHER") // 补充用户名

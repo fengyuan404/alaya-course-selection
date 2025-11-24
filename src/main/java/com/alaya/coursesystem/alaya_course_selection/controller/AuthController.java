@@ -13,10 +13,12 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.validation.BindingResult;
@@ -31,35 +33,79 @@ import org.springframework.security.core.AuthenticationException;
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
 public class AuthController {
+    @Autowired
     private final AuthenticationManager authenticationManager;
     private final UserService userService;
 
+    // 新增：注入HttpServletRequest，用于获取Session
     @PostMapping("/login")
     public ResponseEntity<?> login(
             @RequestParam String username,
-            @RequestParam String password
+            @RequestParam String password,
+            HttpServletRequest request // 新增：获取请求对象，用于操作Session
     ) {
         try {
-            // 1. 校验用户名和密码（通过Spring Security的AuthenticationManager）
+            // 1. 校验用户名和密码（你的原有逻辑，没问题）
             Authentication authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(username, password)
             );
-            // 2. 将认证信息存入Security上下文（维持登录态）
+            // 2. 将认证信息存入Security上下文（你的原有逻辑）
             SecurityContextHolder.getContext().setAuthentication(authentication);
+
+            // ========== 新增：将SecurityContext绑定到Session（关键！） ==========
+            SecurityContext context = SecurityContextHolder.getContext();
+            // 获取Session（true=不存在则创建，确保JSESSIONID生成）
+            request.getSession(true).setAttribute("SPRING_SECURITY_CONTEXT", context);
 
             System.out.println("登录成功 - 认证信息：" + authentication);
             System.out.println("登录成功 - SecurityContext中的认证：" + SecurityContextHolder.getContext().getAuthentication());
 
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            System.out.println("登录后的认证信息：" + auth);
             // 3. 返回当前用户信息（隐藏密码）
             User user = (User) authentication.getPrincipal();
             user.setPassword(null);
             return ResponseEntity.ok(user);
         } catch (AuthenticationException e) {
-            // 登录失败（用户名/密码错误）
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(new ErrorResponse(401, "用户名或密码错误"));
         }
     }
+
+
+//    @Autowired
+//    private final AuthenticationManager authenticationManager;
+//    private final UserService userService;
+//
+//    @PostMapping("/login")
+//    public ResponseEntity<?> login(
+//            @RequestParam String username,
+//            @RequestParam String password
+//    ) {
+//        try {
+//            // 1. 校验用户名和密码（通过Spring Security的AuthenticationManager）
+//            Authentication authentication = authenticationManager.authenticate(
+//                    new UsernamePasswordAuthenticationToken(username, password)
+//            );
+//            // 2. 将认证信息存入Security上下文（维持登录态）
+//            SecurityContextHolder.getContext().setAuthentication(authentication);
+//
+//            System.out.println("登录成功 - 认证信息：" + authentication);
+//            System.out.println("登录成功 - SecurityContext中的认证：" + SecurityContextHolder.getContext().getAuthentication());
+//
+//
+//            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+//            System.out.println("登录后的认证信息：" + auth); // 若不为null，说明触发了Security认证
+//            // 3. 返回当前用户信息（隐藏密码）
+//            User user = (User) authentication.getPrincipal();
+//            user.setPassword(null);
+//            return ResponseEntity.ok(user);
+//        } catch (AuthenticationException e) {
+//            // 登录失败（用户名/密码错误）
+//            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+//                    .body(new ErrorResponse(401, "用户名或密码错误"));
+//        }
+//    }
 
     @PostMapping("/logout")
     public ResponseEntity<ErrorResponse> logout(HttpServletRequest request, HttpServletResponse response) {
