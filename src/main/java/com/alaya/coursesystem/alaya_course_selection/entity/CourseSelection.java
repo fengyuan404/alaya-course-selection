@@ -27,7 +27,7 @@ public class CourseSelection {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @Column(nullable = false)
+    @Column(name = "semester",nullable = false)
     private String semester; // 格式示例："2024-2025-1"（2024-2025学年第一学期）
 
 // 补充getter/setter

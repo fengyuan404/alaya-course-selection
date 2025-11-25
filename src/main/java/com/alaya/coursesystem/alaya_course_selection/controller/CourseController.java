@@ -17,6 +17,7 @@ public class CourseController {
 
     private final CourseService courseService;
 
+
     // 所有用户可查询课程列表
     @GetMapping
     public ResponseEntity<List<Course>> getAllCourses() {

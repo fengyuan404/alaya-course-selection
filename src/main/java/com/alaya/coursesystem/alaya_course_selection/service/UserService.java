@@ -46,7 +46,7 @@ public class UserService implements UserDetailsService {
         user.setUsername(username);
         user.setPassword(passwordEncoder.encode(password)); // BCrypt加密
         user.setEmail(email);
-        user.setRole(role);
+        user.setRole(Role.valueOf(role.name()));
         return userRepository.save(user);
 
 

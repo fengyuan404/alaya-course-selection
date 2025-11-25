@@ -3,6 +3,7 @@ package com.alaya.coursesystem.alaya_course_selection.exception;
 
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
+import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -91,33 +92,45 @@ public class UnifiedExceptionHandler {
     }
 
     // 统一响应体（替换原有ApiResponse/ErrorResponse）
+    @Data
     public static class ApiResponse<T> {
         private int code;
         private String message;
         private T data;
 
-        // 成功响应
-        public static <T> ApiResponse<T> success(T data) {
-            return new ApiResponse<>(200, "操作成功", data);
-        }
-
-        // 失败响应
-        public static <T> ApiResponse<T> fail(int code, String message) {
-            return new ApiResponse<>(code, message, null);
-        }
-
-        // 带数据的失败响应
-        public static <T> ApiResponse<T> fail(int code, String message, T data) {
-            return new ApiResponse<>(code, message, data);
-        }
-
-        // 构造器+getter/setter
+        // 1. 必须：无参构造函数（Jackson反序列化必需）
         public ApiResponse() {}
+
+        // 2. 显式全参构造函数（工具方法调用）
         public ApiResponse(int code, String message, T data) {
             this.code = code;
             this.message = message;
             this.data = data;
         }
+
+        // 成功响应（无需修改，泛型保留完整）
+        public static <T> ApiResponse<T> success(T data) {
+            return new ApiResponse<>(200, "操作成功", data);
+        }
+
+        // 失败响应（无需修改）
+        public static <T> ApiResponse<T> fail(int code, String message) {
+            return new ApiResponse<>(code, message, null);
+        }
+
+        // 带数据的失败响应（无需修改）
+        public static <T> ApiResponse<T> fail(int code, String message, T data) {
+            return new ApiResponse<>(code, message, data);
+        }
+
+
+        // 构造器+getter/setter
+//        public ApiResponse() {}
+//        public ApiResponse(int code, String message, T data) {
+//            this.code = code;
+//            this.message = message;
+//            this.data = data;
+//        }
 
         public int getCode() { return code; }
         public void setCode(int code) { this.code = code; }

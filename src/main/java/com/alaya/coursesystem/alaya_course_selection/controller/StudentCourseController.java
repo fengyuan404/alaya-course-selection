@@ -1,4 +1,3 @@
-// 包路径：com.alaya.coursesystem.alaya_course_selection.controller
 package com.alaya.coursesystem.alaya_course_selection.controller;
 
 import com.alaya.coursesystem.alaya_course_selection.dto.PageRequestDTO;
@@ -31,10 +30,11 @@ public class StudentCourseController {
     private final CourseSelectionService selectionService;
     private final CourseService courseService;
 
-    // ========== 原有接口（保持不变） ==========
+    // ========== 原有接口（补充泛型） ==========
     // 学生选课
     @PostMapping("/select/{courseId}")
-    public ResponseEntity<ApiResponse> selectCourse(
+    // 补充泛型：ApiResponse<CourseSelection>
+    public ResponseEntity<ApiResponse<CourseSelection>> selectCourse(
             @PathVariable Long courseId,
             Authentication authentication) {
         CourseSelection selection = selectionService.selectCourse(courseId, authentication);
@@ -43,7 +43,8 @@ public class StudentCourseController {
 
     // 学生退课
     @DeleteMapping("/drop/{selectionId}")
-    public ResponseEntity<ApiResponse> dropCourse(
+    // 补充泛型：ApiResponse<Void>（无返回数据）
+    public ResponseEntity<ApiResponse<Void>> dropCourse(
             @PathVariable Long selectionId,
             Authentication authentication) {
         selectionService.withdrawCourse(selectionId, authentication);
@@ -52,26 +53,29 @@ public class StudentCourseController {
 
     // 查询已选课程
     @GetMapping("/selected")
-    public ResponseEntity<ApiResponse> getSelectedCourses(Authentication authentication) {
+    // 补充泛型：ApiResponse<List<CourseSelection>>
+    public ResponseEntity<ApiResponse<List<CourseSelection>>> getSelectedCourses(Authentication authentication) {
         List<CourseSelection> selectedCourses = selectionService.getMySchedule(authentication);
         return ResponseEntity.ok(ApiResponse.success(selectedCourses));
     }
 
-    // 学生查看单门课程详情（保持不变）
+    // 学生查看单门课程详情
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse> getCourseDetail(@PathVariable Long id) {
+    // 补充泛型：ApiResponse<Course>
+    public ResponseEntity<ApiResponse<Course>> getCourseDetail(@PathVariable Long id) {
         Course course = courseService.getCourseById(id);
         return ResponseEntity.ok(ApiResponse.success(course));
     }
 
-    // ========== 分页接口修改（适配Service层） ==========
+    // ========== 分页接口修改（核心修复） ==========
     // 1. 学生分页查询所有课程（基础列表）
     @GetMapping
-    public ResponseEntity<UnifiedExceptionHandler.ApiResponse> getCoursesByPage(
-            @RequestParam(defaultValue = "1") Integer pageNum,  // 单独接收分页参数
+    // 补充泛型：ApiResponse<PageResponseVO<Course>>
+    public ResponseEntity<ApiResponse<PageResponseVO<Course>>> getCoursesByPage(
+            @RequestParam(defaultValue = "1") Integer pageNum,
             @RequestParam(defaultValue = "10") Integer pageSize,
-            @RequestParam(required = false) String keyword,     // 单独接收搜索参数
-            @RequestParam(required = false) Integer credits     // Integer允许空，避免转换失败
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) Integer credits
     ) {
         // 手动构建PageRequestDTO（避免绑定失败）
         PageRequestDTO pageRequest = new PageRequestDTO();
@@ -80,20 +84,33 @@ public class StudentCourseController {
         pageRequest.setKeyword(keyword);
         pageRequest.setCredits(credits);
 
-        // 2. 正常业务逻辑
-
-
         PageResponseVO<Course> coursePage = courseService.getAllCoursesByPage(pageRequest);
-        return ResponseEntity.ok(UnifiedExceptionHandler.ApiResponse.success(coursePage));
+        // 统一引用ApiResponse，避免UnifiedExceptionHandler.ApiResponse冗余
+        return ResponseEntity.ok(ApiResponse.success(coursePage));
     }
 
     // 2. 学生模糊搜索课程（支持名称/教师/学分筛选）
     @GetMapping("/search")
-    public ResponseEntity<ApiResponse> searchCourses(
-            @RequestParam(required = false) String keyword,  // 搜索关键词（课程名/教师名）
-            @RequestParam(required = false) Integer credits, // 学分筛选（可选）
-            // 分页参数改为PageRequestDTO
-            @Valid PageRequestDTO pageRequest) {
+    // 补充泛型：ApiResponse<PageResponseVO<Course>>
+    public ResponseEntity<ApiResponse<PageResponseVO<Course>>> searchCourses(
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) Integer credits,
+            @Valid PageRequestDTO pageRequest,
+            // 新增BindingResult处理参数绑定错误，避免直接抛400
+            BindingResult bindingResult) {
+
+        // 处理参数绑定错误（返回友好提示，而非默认400）
+        if (bindingResult.hasErrors()) {
+            String errorMsg = bindingResult.getFieldErrors().stream()
+                    .map(FieldError::getDefaultMessage)
+                    .collect(Collectors.joining("; "));
+            return ResponseEntity.badRequest().body(ApiResponse.fail(400, errorMsg));
+        }
+
+        // 手动给pageRequest补充搜索参数（避免参数分散）
+        pageRequest.setKeyword(keyword);
+        pageRequest.setCredits(credits);
+
         PageResponseVO<Course> coursePage = courseService.searchCourses(keyword, credits, pageRequest);
         return ResponseEntity.ok(ApiResponse.success(coursePage));
     }

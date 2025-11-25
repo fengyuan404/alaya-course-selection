@@ -1,7 +1,9 @@
 package com.alaya.coursesystem.alaya_course_selection.config; // 替换为你的实际包名
 
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.databind.jsontype.impl.LaissezFaireSubTypeValidator;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.Bean;
@@ -39,8 +41,17 @@ public class RedisConfig {
         // 3. 可选：忽略未知字段（避免实体新增字段时序列化报错）
         objectMapper.configure(com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
+//        // ========== 新增：保留泛型类型信息（核心修复） ==========
+//        objectMapper.activateDefaultTyping(
+//                LaissezFaireSubTypeValidator.instance, // 宽松的类型校验器（允许所有子类）
+//                ObjectMapper.DefaultTyping.NON_FINAL,  // 给非final类添加类型信息
+//                JsonTypeInfo.As.PROPERTY // 类型信息作为JSON的一个属性（如"@class":"com.xxx.PageResponseVO"）
+//        );
+
         return objectMapper;
     }
+
+
 
     /**
      * 配置 Redis 缓存管理器，指定序列化规则

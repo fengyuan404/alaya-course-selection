@@ -27,7 +27,7 @@ public class CourseService {
     private final CourseSelectionRepository selectionRepository;
 
     // 优化：使用分页工具类替换原有分页方法
-    @Cacheable(value = "courseList", key = "'all_' + #pageRequest.pageNum + '_' + #pageRequest.pageSize")
+    //@Cacheable(value = "courseList", key = "'all_' + #pageRequest.pageNum + '_' + #pageRequest.pageSize")
     public PageResponseVO<Course> getAllCoursesByPage(PageRequestDTO pageRequest) {
         // 按id降序排序（保持原有排序逻辑）
         Sort sort = Sort.by(Sort.Direction.DESC, "id");

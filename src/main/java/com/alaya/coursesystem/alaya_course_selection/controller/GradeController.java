@@ -80,7 +80,7 @@ public class GradeController {
         return ResponseEntity.ok(ApiResponse.success(analysis));
     }
 
-    @GetMapping("/student/ ")
+    @GetMapping("/student/")
     public Result<List<Grade>> getStudentGradesBySemester(
             @RequestParam Long studentId,
             @RequestParam String semester) {

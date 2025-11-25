@@ -50,4 +50,8 @@ public class Course {
         this.schedule = schedule;
         this.location = location;
     }
+
+   @Column(name = "semester", nullable = false) // 非空约束
+  //  @Column(nullable = false) // 非空约束
+    private String semester; // 如 "2025-2026-1"
 }

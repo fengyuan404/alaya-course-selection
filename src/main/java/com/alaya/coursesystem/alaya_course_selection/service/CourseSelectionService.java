@@ -65,16 +65,20 @@ public class CourseSelectionService {
         Optional<CourseSelection> existingSelection = selectionRepository.findByUserAndCourse(student, course);
         if (existingSelection.isPresent()) {
             // 区分“已选未退”和“已退课可重选”
-//            if ("SELECTED".equals(existingSelection.get().getStatus())) {
-//                throw new UnifiedExceptionHandler.BusinessException("已选课程《" + course.getName() + "》，无需重复选择");
-//            } else {
-//                // 已退课的情况：更新状态为已选，无需新增记录
-//                CourseSelection selection = existingSelection.get();
-//                selection.setStatus("SELECTED");
-//                selection.setSelectTime(LocalDateTime.now());
-//                return selectionRepository.save(selection);
-//            }
-            throw new UnifiedExceptionHandler.BusinessException("已选课程《" + course.getName() + "》，无需重复选择");
+            if ("SELECTED".equals(existingSelection.get().getStatus())) {
+                throw new UnifiedExceptionHandler.BusinessException("已选课程《" + course.getName() + "》，无需重复选择");
+            } else {
+                // 已退课的情况：更新状态为已选，无需新增记录
+                CourseSelection selection = existingSelection.get();
+                selection.setStatus("SELECTED");
+                selection.setSelectTime(LocalDateTime.now());
+                // 兜底：若原有记录semester为空，补充赋值
+                if (selection.getSemester() == null || selection.getSemester().isEmpty()) {
+                    selection.setSemester(course.getSemester());
+                }
+                return selectionRepository.save(selection);
+            }
+           // throw new UnifiedExceptionHandler.BusinessException("已选课程《" + course.getName() + "》，无需重复选择");
         }
 
 
@@ -98,6 +102,11 @@ public class CourseSelectionService {
         newSelection.setCourse(course);
         newSelection.setStatus("SELECTED");
         newSelection.setSelectTime(LocalDateTime.now());
+        // ========== 新增：补充 semester 字段赋值（核心修复） ==========
+// 方案1：从课程表获取学期（推荐，课程归属的学期更合理）
+        newSelection.setSemester(course.getSemester());
+// 方案2：若课程表无semester字段，可固定当前学期（临时方案）
+// newSelection.setSemester("2025-2026-1");
         return selectionRepository.save(newSelection);
     }
 
@@ -138,19 +147,45 @@ public class CourseSelectionService {
      * @param auth 登录用户信息
      * @return 排序后的已选课程列表
      */
+//    @Cacheable(value = "studentSchedule", key = "#auth.principal.id")
+//    public List<CourseSelection> getMySchedule(Authentication auth) {
+//        User student = (User) auth.getPrincipal();
+//        List<CourseSelection> myCourses = selectionRepository.findByUserAndStatus(student, "SELECTED");
+//
+//        // 按上课时间排序（周一→周日，早→晚）
+//        myCourses.sort(Comparator.comparing(cs -> {
+//            String schedule = cs.getCourse().getSchedule();
+//            // 解析星期和节次（例："周一 1-2节" → 排序值=101）
+//            String[] parts = schedule.split(" ");
+//            int weekOrder = getWeekOrder(parts[0]);
+//            int classOrder = Integer.parseInt(parts[1].split("-")[0]);
+//            return weekOrder * 100 + classOrder;
+//        }));
+//
+//        return myCourses;
+//    }
+
+
     @Cacheable(value = "studentSchedule", key = "#auth.principal.id")
     public List<CourseSelection> getMySchedule(Authentication auth) {
         User student = (User) auth.getPrincipal();
         List<CourseSelection> myCourses = selectionRepository.findByUserAndStatus(student, "SELECTED");
 
-        // 按上课时间排序（周一→周日，早→晚）
+        // 按上课时间排序（添加容错处理）
         myCourses.sort(Comparator.comparing(cs -> {
             String schedule = cs.getCourse().getSchedule();
-            // 解析星期和节次（例："周一 1-2节" → 排序值=101）
+            if (schedule == null || schedule.trim().isEmpty()) {
+                // 空时间默认排最后（星期0，节次0）
+                return 0;
+            }
             String[] parts = schedule.split(" ");
-            int weekOrder = getWeekOrder(parts[0]);
-            int classOrder = Integer.parseInt(parts[1].split("-")[0]);
-            return weekOrder * 100 + classOrder;
+            // 处理拆分后数组长度不足2的情况
+            String weekPart = parts.length >= 1 ? parts[0] : "";
+            String sectionPart = parts.length >= 2 ? parts[1] : "0-0节";
+
+            int weekOrder = getWeekOrder(weekPart); // 星期解析容错（无效星期返回0）
+            int[] sections = parseSections(sectionPart); // 节次解析已在parseSections中做容错
+            return weekOrder * 100 + sections[0];
         }));
 
         return myCourses;
@@ -185,16 +220,31 @@ public class CourseSelectionService {
      * @param sectionStr 节次字符串（例："1-2节"）
      * @return 节次范围数组（例：[1,2]）
      */
+//    private int[] parseSections(String sectionStr) {
+//        try {
+//            String numPart = sectionStr.replace("节", "").trim();
+//            String[] nums = numPart.split("-");
+//            return new int[]{
+//                    Integer.parseInt(nums[0]),
+//                    Integer.parseInt(nums[1])
+//            };
+//        } catch (Exception e) {
+//            throw new UnifiedExceptionHandler.BusinessException("课程时间格式错误：" + sectionStr);
+//        }
+//    }
+
+
     private int[] parseSections(String sectionStr) {
         try {
             String numPart = sectionStr.replace("节", "").trim();
             String[] nums = numPart.split("-");
-            return new int[]{
-                    Integer.parseInt(nums[0]),
-                    Integer.parseInt(nums[1])
-            };
+            // 处理拆分后长度不足2的情况
+            int start = nums.length >= 1 ? Integer.parseInt(nums[0]) : 0;
+            int end = nums.length >= 2 ? Integer.parseInt(nums[1]) : 0;
+            return new int[]{start, end};
         } catch (Exception e) {
-            throw new UnifiedExceptionHandler.BusinessException("课程时间格式错误：" + sectionStr);
+            // 格式错误默认节次为0-0
+            return new int[]{0, 0};
         }
     }
 
