@@ -33,6 +33,9 @@ public class User implements UserDetails {
     @Column(unique = true, nullable = false)
     private String email;
 
+    @Column(unique = true)
+    private String idCard; // 学号/工号
+
     // 核心：只保留Role类型的持久化字段（和数据库映射）
     @Enumerated(EnumType.STRING)
     private Role role = Role.STUDENT;

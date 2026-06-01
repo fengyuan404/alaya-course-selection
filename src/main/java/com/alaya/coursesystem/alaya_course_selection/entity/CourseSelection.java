@@ -6,6 +6,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.time.LocalDateTime;
 
@@ -36,8 +37,15 @@ public class CourseSelection {
     @JoinColumn(name = "course_id", nullable = false)
     private Course course;
     private String status; // 状态：SELECTED（已选）/WITHDRAWN（已退课）
+        @JsonProperty("createTime")
     private LocalDateTime selectTime; // 选课时间
     @CreationTimestamp
     private LocalDateTime selectedAt; // 选课时间
+
+    @Transient
+    private String gradeStatus; // 成绩状态（已录入/未录入）
+
+    @Transient
+    private java.util.Map<String, Object> grade; // 成绩信息（score, level, comment）
 
 }

@@ -3,6 +3,8 @@ package com.alaya.coursesystem.alaya_course_selection.service;
 import com.alaya.coursesystem.alaya_course_selection.entity.Course;
 import com.alaya.coursesystem.alaya_course_selection.entity.Grade;
 import com.alaya.coursesystem.alaya_course_selection.entity.User;
+import com.alaya.coursesystem.alaya_course_selection.dto.GradeBatchDTO;
+import com.alaya.coursesystem.alaya_course_selection.entity.CourseSelection;
 import com.alaya.coursesystem.alaya_course_selection.exception.UnifiedExceptionHandler;
 import com.alaya.coursesystem.alaya_course_selection.repository.CourseRepository;
 import com.alaya.coursesystem.alaya_course_selection.repository.CourseSelectionRepository;
@@ -124,6 +126,50 @@ public class GradeService {
      * @param semester 学期
      * @return 该学期该课程的成绩列表
      */
+    /**
+     * 批量保存成绩（教师用）
+     */
+    @Transactional
+    @CacheEvict(value = {"studentGrades", "courseGrades"}, allEntries = true)
+    public void batchSaveGrades(List<GradeBatchDTO> gradeList, User teacher) {
+        if (gradeList == null || gradeList.isEmpty()) {
+            return;
+        }
+        for (GradeBatchDTO dto : gradeList) {
+            // 查找课程
+            Course course = courseRepository.findById(dto.getCourseId())
+                    .orElseThrow(() -> new UnifiedExceptionHandler.BusinessException("课程不存在：" + dto.getCourseId()));
+            // 权限校验：只能给自己课程的选课记录打分
+            if (!course.getTeacher().getId().equals(teacher.getId())) {
+                throw new UnifiedExceptionHandler.BusinessException("无权操作其他教师的课程成绩");
+            }
+            // 查找学生
+            User student = userRepository.findById(dto.getStudentId())
+                    .orElseThrow(() -> new UnifiedExceptionHandler.BusinessException("学生不存在：" + dto.getStudentId()));
+            // 查找选课记录
+            CourseSelection selection = selectionRepository.findByUserAndCourse(student, course)
+                    .orElseThrow(() -> new UnifiedExceptionHandler.BusinessException("选课记录不存在：学生ID=" + dto.getStudentId() + ", 课程ID=" + dto.getCourseId()));
+            // 分数范围校验
+            if (dto.getScore() != null && (dto.getScore().compareTo(java.math.BigDecimal.ZERO) < 0 || dto.getScore().compareTo(new java.math.BigDecimal(100)) > 0)) {
+                throw new UnifiedExceptionHandler.BusinessException("分数必须在0-100之间");
+            }
+            // 查找或创建成绩
+            Grade grade = gradeRepository.findBySelectionId(selection.getId()).orElse(new Grade());
+            grade.setSelection(selection);
+            grade.setScore(dto.getScore());
+            // 转换level字符串为GradeLevel枚举
+            if (dto.getLevel() != null && !dto.getLevel().isEmpty()) {
+                try {
+                    grade.setLevel(Grade.GradeLevel.valueOf(dto.getLevel()));
+                } catch (IllegalArgumentException e) {
+                    throw new UnifiedExceptionHandler.BusinessException("无效的成绩等级：" + dto.getLevel());
+                }
+            }
+            grade.setComment(dto.getComment());
+            gradeRepository.save(grade);
+        }
+    }
+
     public List<Grade> getCourseGradesBySemester(Long courseId, Long teacherId, String semester) {
         // 1. 权限校验（教师只能查自己的课程）
         Course course = courseRepository.findById(courseId)

@@ -5,6 +5,10 @@ import com.alaya.coursesystem.alaya_course_selection.entity.CourseSelection;
 import com.alaya.coursesystem.alaya_course_selection.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 import java.util.Optional;
@@ -23,4 +27,11 @@ public interface CourseSelectionRepository extends JpaRepository<CourseSelection
     // 按学生查询所有选课记录（可选）
     List<CourseSelection> findByUser(User user);
     List<CourseSelection> findByCourse(Course course);
+
+    // 分页查询课程选课记录
+    Page<CourseSelection> findByCourse_Id(Long courseId, Pageable pageable);
+
+    // 分页查询课程选课记录（含学生姓名模糊搜索）
+    @Query("SELECT cs FROM CourseSelection cs JOIN cs.user u WHERE cs.course.id = :courseId AND (:keyword IS NULL OR :keyword = '' OR u.username LIKE CONCAT('%', :keyword, '%'))")
+    Page<CourseSelection> findByCourseIdAndKeyword(@Param("courseId") Long courseId, @Param("keyword") String keyword, Pageable pageable);
 }

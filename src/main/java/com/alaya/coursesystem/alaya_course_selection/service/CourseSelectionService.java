@@ -5,7 +5,12 @@ import com.alaya.coursesystem.alaya_course_selection.entity.CourseSelection;
 import com.alaya.coursesystem.alaya_course_selection.entity.User;
 import com.alaya.coursesystem.alaya_course_selection.exception.UnifiedExceptionHandler;
 import com.alaya.coursesystem.alaya_course_selection.repository.CourseRepository;
+import com.alaya.coursesystem.alaya_course_selection.repository.GradeRepository;
 import com.alaya.coursesystem.alaya_course_selection.repository.CourseSelectionRepository;
+import com.alaya.coursesystem.alaya_course_selection.dto.PageRequestDTO;
+import com.alaya.coursesystem.alaya_course_selection.vo.PageResponseVO;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Sort;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
@@ -17,6 +22,8 @@ import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
+import java.util.Map;
+import java.util.HashMap;
 
 /**
  * 选课核心服务（迭代3完整版，含容量校验、冲突检测、退课功能）
@@ -28,6 +35,7 @@ public class CourseSelectionService {
     // 注入依赖
     private final CourseSelectionRepository selectionRepository;
     private final CourseRepository courseRepository;
+    private final GradeRepository gradeRepository;
 
     /**
      * 学生选课（核心方法，含完整校验）
@@ -273,6 +281,43 @@ public class CourseSelectionService {
     }
 
     // 可选：校验课程是否还有剩余容量
+    /**
+     * 分页查询课程选课学生（教师用，含成绩状态）
+     */
+    public PageResponseVO<CourseSelection> getCourseStudentsPage(Long courseId, String keyword, PageRequestDTO pageRequest) {
+        Course course = courseRepository.findById(courseId)
+                .orElseThrow(() -> new UnifiedExceptionHandler.BusinessException("课程不存在：" + courseId));
+
+        Sort sort = Sort.by(Sort.Direction.DESC, "id");
+        Page<CourseSelection> selectionPage;
+
+        if (keyword != null && !keyword.isEmpty()) {
+            selectionPage = selectionRepository.findByCourseIdAndKeyword(courseId, keyword, pageRequest.toPageable(sort));
+        } else {
+            selectionPage = selectionRepository.findByCourse_Id(courseId, pageRequest.toPageable(sort));
+        }
+
+        // 填充成绩状态和成绩信息
+        for (CourseSelection cs : selectionPage.getContent()) {
+            gradeRepository.findBySelectionId(cs.getId()).ifPresentOrElse(
+                grade -> {
+                    cs.setGradeStatus("已录入");
+                    Map<String, Object> gradeMap = new HashMap<>();
+                    gradeMap.put("score", grade.getScore());
+                    gradeMap.put("level", grade.getLevel());
+                    gradeMap.put("comment", grade.getComment());
+                    cs.setGrade(gradeMap);
+                },
+                () -> {
+                    cs.setGradeStatus("未录入");
+                    cs.setGrade(null);
+                }
+            );
+        }
+
+        return PageResponseVO.from(selectionPage);
+    }
+
     public boolean hasRemainingCapacity(Long courseId) {
         Course course = courseRepository.findById(courseId)
                 .orElseThrow(() -> new UnifiedExceptionHandler.BusinessException("课程不存在"));
