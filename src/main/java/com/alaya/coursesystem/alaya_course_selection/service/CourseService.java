@@ -5,7 +5,7 @@ import com.alaya.coursesystem.alaya_course_selection.entity.Course;
 import com.alaya.coursesystem.alaya_course_selection.entity.CourseSelection;
 import com.alaya.coursesystem.alaya_course_selection.exception.UnifiedExceptionHandler;
 import com.alaya.coursesystem.alaya_course_selection.repository.CourseRepository;
-import com.alaya.coursesystem.alaya_course_selection.repository.CourseSelectionRepository;
+import com.alaya.coursesystem.alaya_course_selection.repository.CourseSelectionRepository;`r`nimport com.alaya.coursesystem.alaya_course_selection.repository.GradeRepository;
 import com.alaya.coursesystem.alaya_course_selection.vo.PageResponseVO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
@@ -24,7 +24,7 @@ import java.util.List;
 public class CourseService {
 
     private final CourseRepository courseRepository;
-    private final CourseSelectionRepository selectionRepository;
+    private final CourseSelectionRepository selectionRepository;`r`n    private final GradeRepository gradeRepository;
 
     // 优化：使用分页工具类替换原有分页方法
     //@Cacheable(value = "courseList", key = "'all_' + #pageRequest.pageNum + '_' + #pageRequest.pageSize")
@@ -84,13 +84,19 @@ public class CourseService {
         return selectedCount < course.getCapacity();
     }
 
+    @Transactional
     @CacheEvict(value = "courseList", allEntries = true)
     public void deleteCourse(Long id) {
         Course course = getCourseById(id);
         long selectedCount = selectionRepository.countByCourseAndStatus(course, "SELECTED");
         if (selectedCount > 0) {
-            // 优化：使用统一异常处理器
             throw new UnifiedExceptionHandler.BusinessException("该课程已有学生选课（" + selectedCount + "人），无法删除");
+        }
+        // 清理已退课记录及其成绩（FK约束要求先删子记录）
+        List<CourseSelection> allSelections = selectionRepository.findByCourse(course);
+        for (CourseSelection cs : allSelections) {
+            gradeRepository.findBySelectionId(cs.getId()).ifPresent(gradeRepository::delete);
+            selectionRepository.delete(cs);
         }
         courseRepository.deleteById(id);
     }
