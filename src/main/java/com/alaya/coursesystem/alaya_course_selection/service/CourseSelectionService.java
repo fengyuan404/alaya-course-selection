@@ -44,7 +44,7 @@ public class CourseSelectionService {
      * @return 选课记录
      */
     @Transactional(rollbackFor = Exception.class)
-    @CacheEvict(value = {"studentGrades", "courseGrades"}, allEntries = true)
+    @CacheEvict(value = {"studentGrades", "courseGrades", "studentSchedule"}, allEntries = true)
     public CourseSelection selectCourse(Long courseId, Authentication auth) {
         // 1. 获取当前登录学生
         User student = (User) auth.getPrincipal();
@@ -124,7 +124,7 @@ public class CourseSelectionService {
      * @param auth 登录用户信息
      */
     @Transactional(rollbackFor = Exception.class)
-    @CacheEvict(value = {"studentGrades", "courseGrades"}, allEntries = true)
+    @CacheEvict(value = {"studentGrades", "courseGrades", "studentSchedule"}, allEntries = true)
     public void withdrawCourse(Long selectionId, Authentication auth) {
         User student = (User) auth.getPrincipal();
 
