@@ -52,7 +52,7 @@ public class AdminController {
 
         for (Course course : courses) {
             // 查询该课程的选课人数
-            long selectedCount = selectionRepository.findByCourse(course).size();
+            long selectedCount = selectionRepository.countByCourseAndStatus(course, "SELECTED");
             // 组装单门课程的统计数据
             Map<String, Object> courseStats = new HashMap<>();
             courseStats.put("totalCapacity", course.getCapacity());

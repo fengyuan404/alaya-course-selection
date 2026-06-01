@@ -80,14 +80,14 @@ public class CourseService {
     }
 
     public boolean hasCapacity(Course course) {
-        long selectedCount = selectionRepository.findByCourse(course).size();
+        long selectedCount = selectionRepository.countByCourseAndStatus(course, "SELECTED");
         return selectedCount < course.getCapacity();
     }
 
     @CacheEvict(value = "courseList", allEntries = true)
     public void deleteCourse(Long id) {
         Course course = getCourseById(id);
-        long selectedCount = selectionRepository.findByCourse(course).size();
+        long selectedCount = selectionRepository.countByCourseAndStatus(course, "SELECTED");
         if (selectedCount > 0) {
             // 优化：使用统一异常处理器
             throw new UnifiedExceptionHandler.BusinessException("该课程已有学生选课（" + selectedCount + "人），无法删除");

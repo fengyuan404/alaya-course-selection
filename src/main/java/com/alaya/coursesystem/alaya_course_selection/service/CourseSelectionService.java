@@ -292,9 +292,9 @@ public class CourseSelectionService {
         Page<CourseSelection> selectionPage;
 
         if (keyword != null && !keyword.isEmpty()) {
-            selectionPage = selectionRepository.findByCourseIdAndKeyword(courseId, keyword, pageRequest.toPageable(sort));
+            selectionPage = selectionRepository.findByCourseIdAndKeywordAndStatus(courseId, keyword, "SELECTED", pageRequest.toPageable(sort));
         } else {
-            selectionPage = selectionRepository.findByCourse_Id(courseId, pageRequest.toPageable(sort));
+            selectionPage = selectionRepository.findByCourse_IdAndStatus(courseId, "SELECTED", pageRequest.toPageable(sort));
         }
 
         // 填充成绩状态和成绩信息

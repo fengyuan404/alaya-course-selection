@@ -31,7 +31,12 @@ public interface CourseSelectionRepository extends JpaRepository<CourseSelection
     // 分页查询课程选课记录
     Page<CourseSelection> findByCourse_Id(Long courseId, Pageable pageable);
 
+    Page<CourseSelection> findByCourse_IdAndStatus(Long courseId, String status, Pageable pageable);
+
     // 分页查询课程选课记录（含学生姓名模糊搜索）
     @Query("SELECT cs FROM CourseSelection cs JOIN cs.user u WHERE cs.course.id = :courseId AND (:keyword IS NULL OR :keyword = '' OR u.username LIKE CONCAT('%', :keyword, '%'))")
     Page<CourseSelection> findByCourseIdAndKeyword(@Param("courseId") Long courseId, @Param("keyword") String keyword, Pageable pageable);
+
+    @Query("SELECT cs FROM CourseSelection cs JOIN cs.user u WHERE cs.course.id = :courseId AND cs.status = :status AND (:keyword IS NULL OR :keyword = '' OR u.username LIKE CONCAT('%', :keyword, '%'))")
+    Page<CourseSelection> findByCourseIdAndKeywordAndStatus(@Param("courseId") Long courseId, @Param("keyword") String keyword, @Param("status") String status, Pageable pageable);
 }
