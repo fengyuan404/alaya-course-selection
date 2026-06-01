@@ -53,9 +53,10 @@ public class GradeServiceTest {
     void initTestData() {
         // 1. 创建测试教师（生成唯一email）
         testTeacher = new User();
+
         testTeacher.setUsername("test_teacher_" + UUID.randomUUID().toString().substring(0, 8));
         testTeacher.setPassword("123456");
-        testTeacher.setRole(UserRole.TEACHER);
+        testTeacher.setRole(Role.TEACHER);
         testTeacher.setEmail("teacher_" + UUID.randomUUID() + "@alaya.edu"); // 唯一email
         testTeacher = userRepository.save(testTeacher);
 
@@ -63,12 +64,13 @@ public class GradeServiceTest {
         testStudent = new User();
         testStudent.setUsername("test_student_" + UUID.randomUUID().toString().substring(0, 8));
         testStudent.setPassword("123456");
-        testStudent.setRole(UserRole.STUDENT);
+        testStudent.setRole(Role.STUDENT);
         testStudent.setEmail("student_" + UUID.randomUUID() + "@alaya.edu"); // 唯一email
         testStudent = userRepository.save(testStudent);
 
         // 3. 创建测试课程（关联教师 + 补全所有非空字段）
         testCourse = new Course();
+        testCourse.setSemester("2024-2025-1");
         testCourse.setName("测试课程_" + UUID.randomUUID().toString().substring(0, 8));
         testCourse.setCredits(3);
         testCourse.setTeacher(testTeacher);
@@ -149,7 +151,7 @@ public class GradeServiceTest {
         User otherTeacher = new User();
         otherTeacher.setUsername("other_teacher_" + UUID.randomUUID().toString().substring(0, 8));
         otherTeacher.setPassword("123456");
-        otherTeacher.setRole(UserRole.TEACHER);
+        otherTeacher.setRole(Role.TEACHER);
         otherTeacher.setEmail("other_teacher_" + UUID.randomUUID() + "@alaya.edu");
         otherTeacher = userRepository.save(otherTeacher);
 
@@ -209,7 +211,7 @@ public class GradeServiceTest {
         // 学生2
         User student2 = new User();
         student2.setUsername("student2_" + UUID.randomUUID().toString().substring(0, 8));
-        student2.setRole(UserRole.STUDENT);
+        student2.setRole(Role.STUDENT);
         student2.setPassword("123456");
         student2.setEmail("student2_" + UUID.randomUUID() + "@alaya.edu");
         student2 = userRepository.save(student2);

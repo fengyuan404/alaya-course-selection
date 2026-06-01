@@ -26,6 +26,7 @@ public class CourseSelection {
 
     @ManyToOne // 多对一：多个选课记录对应一个用户
     @JoinColumn(name = "user_id", nullable = false)
+    @JsonProperty("student")
     private User user;
 
     @Column(name = "semester",nullable = false)
@@ -37,7 +38,6 @@ public class CourseSelection {
     @JoinColumn(name = "course_id", nullable = false)
     private Course course;
     private String status; // 状态：SELECTED（已选）/WITHDRAWN（已退课）
-        @JsonProperty("createTime")
     private LocalDateTime selectTime; // 选课时间
     @CreationTimestamp
     private LocalDateTime selectedAt; // 选课时间

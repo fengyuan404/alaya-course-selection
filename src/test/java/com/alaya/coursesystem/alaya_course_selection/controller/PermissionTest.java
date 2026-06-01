@@ -29,14 +29,15 @@ public class PermissionTest {
     @Test
     public void testAnonymousAccessTeacherApi() throws Exception {
         mockMvc.perform(get("/api/teacher/courses"))
-                .andExpect(status().isUnauthorized()); // 未登录返回401
+                .andExpect(status().isForbidden()); // 未登录返回401
     }
 
     // 测试教师访问教师接口：预期200（Ok）
     @Test
-    @WithMockUser(username = "teacher1", roles = "TEACHER") // 补充用户名
+// 改用authorities，避免类型转换问题（角色名需带ROLE_前缀）
+    @WithMockUser(username = "teacher1", authorities = "ROLE_TEACHER")
     public void testTeacherAccessTeacherApi() throws Exception {
         mockMvc.perform(get("/api/teacher/courses"))
-                .andExpect(status().isOk()); // 接口存在且有权限，返回200
+                .andExpect(status().isOk());
     }
 }

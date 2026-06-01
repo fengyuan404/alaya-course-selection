@@ -58,7 +58,7 @@ public class RedisCacheTest {
         testTeacher = new User();
         testTeacher.setUsername("cache_teacher_" + System.currentTimeMillis());
         testTeacher.setPassword("123456");
-        testTeacher.setRole(UserRole.TEACHER);
+        testTeacher.setRole(Role.TEACHER);
         testTeacher.setEmail("teacher_" + System.currentTimeMillis() + "@test.com"); // 邮箱必填
         //testTeacher.setPhone("13800138000"); // 手机号必填（若有）
         testTeacher = userRepository.save(testTeacher);
@@ -67,7 +67,7 @@ public class RedisCacheTest {
         testStudent = new User();
         testStudent.setUsername("cache_student_" + System.currentTimeMillis());
         testStudent.setPassword("123456");
-        testStudent.setRole(UserRole.STUDENT);
+        testStudent.setRole(Role.STUDENT);
         testStudent.setEmail("student_" + System.currentTimeMillis() + "@test.com"); // 邮箱必填
         //testStudent.setPhone("13900139000"); // 手机号必填（若有）
         testStudent = userRepository.save(testStudent);
@@ -78,6 +78,7 @@ public class RedisCacheTest {
         testCourse.setCredits(3);
         testCourse.setTeacher(testTeacher);
         // 新增：补充Course必填字段
+        testCourse.setSemester("2024-2025-1");
         testCourse.setSchedule("周一1-2节"); // 上课时间（必填）
         testCourse.setLocation("教学楼A101"); // 上课地点（必填）
         testCourse.setCapacity(50); // 课程容量（必填）
@@ -141,6 +142,7 @@ public class RedisCacheTest {
         newCourse.setCredits(2);
         newCourse.setTeacher(testTeacher);
         // 补充必填字段
+        newCourse.setSemester("2024-2025-1");
         newCourse.setSchedule("周二3-4节");
         newCourse.setLocation("教学楼B202");
         newCourse.setCapacity(40);

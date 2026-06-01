@@ -1,11 +1,8 @@
 package com.alaya.coursesystem.alaya_course_selection.test;
 
-//迭代3测试
-
 import com.alaya.coursesystem.alaya_course_selection.entity.Course;
 import com.alaya.coursesystem.alaya_course_selection.entity.CourseSelection;
 import com.alaya.coursesystem.alaya_course_selection.entity.User;
-import com.alaya.coursesystem.alaya_course_selection.entity.UserRole;
 import com.alaya.coursesystem.alaya_course_selection.entity.Role;
 import com.alaya.coursesystem.alaya_course_selection.exception.UnifiedExceptionHandler;
 import com.alaya.coursesystem.alaya_course_selection.repository.CourseRepository;
@@ -36,7 +33,7 @@ public class CourseSelectionTest {
     @Autowired
     private CourseSelectionRepository selectionRepository;
     @Autowired
-    private PasswordEncoder passwordEncoder; // 注入密码加密器
+    private PasswordEncoder passwordEncoder;
 
     private User student2;
     private User teacher1;
@@ -52,23 +49,19 @@ public class CourseSelectionTest {
                     User t = new User();
                     t.setUsername("test_teacher");
                     t.setEmail("teacher_test@example.com");
-                    t.setPassword(passwordEncoder.encode("123456")); // 加密存储
-                    //t.setName("测试教师");
-                    t.setRole(UserRole.TEACHER); // 必须指定角色
+                    t.setPassword(passwordEncoder.encode("123456"));
+                    t.setRole(Role.TEACHER);
                     return userRepository.save(t);
                 });
 
         // 2. 初始化学生1
-        // 必须指定角色
-        // 测试数据
         User student1 = userRepository.findByUsername("test_student1")
                 .orElseGet(() -> {
                     User s = new User();
                     s.setUsername("test_student1");
                     s.setEmail("student1_test@example.com");
                     s.setPassword(passwordEncoder.encode("123456"));
-                    //s.setName("测试学生1");
-                    s.setRole(UserRole.STUDENT); // 必须指定角色
+                    s.setRole(Role.STUDENT);
                     return userRepository.save(s);
                 });
 
@@ -79,39 +72,40 @@ public class CourseSelectionTest {
                     s.setUsername("test_student2");
                     s.setPassword(passwordEncoder.encode("123456"));
                     s.setEmail("student2_test@example.com");
-                //    s.setName("测试学生2");
-                    s.setRole(UserRole.STUDENT);
+                    s.setRole(Role.STUDENT);
                     return userRepository.save(s);
                 });
 
-        // 4. 创建学生1的认证对象（含权限信息）
+        // 4. 创建学生1的认证对象
         auth1 = new UsernamePasswordAuthenticationToken(
                 student1,
                 null,
-                student1.getAuthorities() // 必须传入权限（从Role转换）
+                student1.getAuthorities()
         );
 
         // 5. 创建容量1的课程（时间：周一 1-2节）
         fullCourse = new Course();
+        fullCourse.setSemester("2024-2025-1"); // ✅ 先初始化对象，再赋值
         fullCourse.setName("容量测试课程");
-        fullCourse.setCapacity(1); // 容量1
+        fullCourse.setCapacity(1);
         fullCourse.setCredits(2);
-        fullCourse.setSchedule("周一 1-2节"); // 符合时间解析格式
+        fullCourse.setSchedule("周一 1-2节");
         fullCourse.setLocation("测试教室1");
-        fullCourse.setTeacher(teacher1); // 关联教师
+        fullCourse.setTeacher(teacher1);
         fullCourse = courseRepository.save(fullCourse);
 
         // 6. 创建时间冲突的课程（同时间：周一 1-2节）
-        conflictCourse = new Course();
+        conflictCourse = new Course(); // ✅ 先初始化对象，再调用方法
+        conflictCourse.setSemester("2024-2025-1");
         conflictCourse.setName("冲突测试课程");
         conflictCourse.setCapacity(10);
         conflictCourse.setCredits(2);
-        conflictCourse.setSchedule("周一 1-2节"); // 与fullCourse时间冲突
+        conflictCourse.setSchedule("周一 1-2节");
         conflictCourse.setLocation("测试教室2");
         conflictCourse.setTeacher(teacher1);
         conflictCourse = courseRepository.save(conflictCourse);
 
-        // 清理残留数据（避免干扰）
+        // 清理残留数据
         //selectionRepository.deleteByCourse(fullCourse);
         //selectionRepository.deleteByCourse(conflictCourse);
     }

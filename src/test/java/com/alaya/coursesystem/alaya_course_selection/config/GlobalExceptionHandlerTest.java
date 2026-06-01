@@ -2,6 +2,7 @@ package com.alaya.coursesystem.alaya_course_selection.config;
 
 import com.alaya.coursesystem.alaya_course_selection.controller.GradeController;
 import com.alaya.coursesystem.alaya_course_selection.entity.Grade;
+import com.alaya.coursesystem.alaya_course_selection.entity.Role;
 import com.alaya.coursesystem.alaya_course_selection.entity.User;
 import com.alaya.coursesystem.alaya_course_selection.entity.UserRole;
 import com.alaya.coursesystem.alaya_course_selection.exception.UnifiedExceptionHandler;
@@ -12,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean; // 关键：保留此包，但确保依赖兼容
+
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -46,7 +48,7 @@ public class GlobalExceptionHandlerTest {
         Authentication auth = org.mockito.Mockito.mock(Authentication.class);
         User mockTeacher = new User();
         mockTeacher.setId(1L);
-        mockTeacher.setRole(UserRole.TEACHER);
+        mockTeacher.setRole(Role.TEACHER);
         when(auth.getPrincipal()).thenReturn(mockTeacher);
 
         SecurityContext securityContext = org.mockito.Mockito.mock(SecurityContext.class);
@@ -74,7 +76,7 @@ public class GlobalExceptionHandlerTest {
         Authentication auth = org.mockito.Mockito.mock(Authentication.class);
         User mockStudent = new User();
         mockStudent.setId(2L);
-        mockStudent.setRole(UserRole.STUDENT);
+        mockStudent.setRole(Role.STUDENT);
         when(auth.getPrincipal()).thenReturn(mockStudent);
 
         SecurityContext securityContext = org.mockito.Mockito.mock(SecurityContext.class);
