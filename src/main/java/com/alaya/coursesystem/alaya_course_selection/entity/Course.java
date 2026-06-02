@@ -54,4 +54,10 @@ public class Course {
    @Column(name = "semester", nullable = false) // 非空约束
   //  @Column(nullable = false) // 非空约束
     private String semester; // 如 "2025-2026-1"
+
+    @Transient
+    private Integer selectedCount; // 已选人数（非持久化）
+
+    @Transient
+    private Boolean alreadySelected; // 当前学生是否已选（非持久化）
 }

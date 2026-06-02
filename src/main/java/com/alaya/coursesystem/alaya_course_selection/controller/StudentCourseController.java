@@ -5,7 +5,9 @@ import com.alaya.coursesystem.alaya_course_selection.entity.Course;
 import com.alaya.coursesystem.alaya_course_selection.entity.CourseSelection;
 import com.alaya.coursesystem.alaya_course_selection.exception.UnifiedExceptionHandler;
 import com.alaya.coursesystem.alaya_course_selection.exception.UnifiedExceptionHandler.ApiResponse;
+import com.alaya.coursesystem.alaya_course_selection.repository.CourseSelectionRepository;
 import com.alaya.coursesystem.alaya_course_selection.service.CourseSelectionService;
+import com.alaya.coursesystem.alaya_course_selection.entity.User;
 import com.alaya.coursesystem.alaya_course_selection.service.CourseService;
 import com.alaya.coursesystem.alaya_course_selection.vo.PageResponseVO;
 import lombok.RequiredArgsConstructor;
@@ -29,6 +31,7 @@ public class StudentCourseController {
 
     private final CourseSelectionService selectionService;
     private final CourseService courseService;
+    private final CourseSelectionRepository selectionRepository;
 
     // ========== 原有接口（补充泛型） ==========
     // 学生选课
@@ -85,6 +88,17 @@ public class StudentCourseController {
         pageRequest.setCredits(credits);
 
         PageResponseVO<Course> coursePage = courseService.getAllCoursesByPage(pageRequest);
+
+        // 为每个课程填充 selectedCount 和 alreadySelected
+        User currentUser = (User) org.springframework.security.core.context.SecurityContextHolder
+                .getContext().getAuthentication().getPrincipal();
+        for (Course course : coursePage.getList()) {
+            long count = selectionRepository.countByCourseAndStatus(course, "SELECTED");
+            course.setSelectedCount((int) count);
+            boolean selected = selectionRepository.findByUserAndCourse(currentUser, course).isPresent();
+            course.setAlreadySelected(selected);
+        }
+
         // 统一引用ApiResponse，避免UnifiedExceptionHandler.ApiResponse冗余
         return ResponseEntity.ok(ApiResponse.success(coursePage));
     }
