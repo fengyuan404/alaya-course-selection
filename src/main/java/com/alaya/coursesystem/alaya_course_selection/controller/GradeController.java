@@ -42,13 +42,21 @@ public class GradeController {
         return ResponseEntity.ok(ApiResponse.success(grade));
     }
 
-    // 学生查询个人成绩
+    // 学生查询个人成绩（支持按学期筛选）
     @GetMapping("/student")
-    public ResponseEntity<ApiResponse> getStudentGrades(Authentication authentication) {
+    public ResponseEntity<ApiResponse> getStudentGrades(
+            Authentication authentication,
+            @RequestParam(required = false) String semester) {
         User student = (User) authentication.getPrincipal();
-        List<Grade> grades = gradeService.getStudentGrades(student.getId());
+        List<Grade> grades;
+        if (semester != null && !semester.isEmpty()) {
+            grades = gradeService.getStudentGradesBySemester(student.getId(), semester);
+        } else {
+            grades = gradeService.getStudentGrades(student.getId());
+        }
 
-        logService.recordLog(student.getUsername(), "成绩查询", "查询个人成绩");
+        logService.recordLog(student.getUsername(), "成绩查询",
+                semester != null ? "按学期查询成绩: " + semester : "查询个人成绩");
         return ResponseEntity.ok(ApiResponse.success(grades));
     }
 
