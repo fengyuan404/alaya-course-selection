@@ -89,7 +89,7 @@ public class GradeService {
                 .filter(g -> g.getScore() != null)
                 .map(Grade::getScore)
                 .reduce(BigDecimal.ZERO, BigDecimal::add)
-                .divide(BigDecimal.valueOf(grades.size()), 2, BigDecimal.ROUND_HALF_UP);
+                .divide(BigDecimal.valueOf(grades.size()), 2, java.math.RoundingMode.HALF_UP);
 
         // 统计等级分布
         Map<Grade.GradeLevel, Long> levelDistribution = grades.stream()
@@ -127,11 +127,6 @@ public class GradeService {
      * @return 该学期该课程的成绩列表
      */
     /**
-     * 批量保存成绩（教师用）
-     */
-    @Transactional
-    @CacheEvict(value = {"studentGrades", "courseGrades"}, allEntries = true)
-    /**
      * 单条保存成绩（复用批量保存逻辑）
      */
     @Transactional
@@ -139,6 +134,11 @@ public class GradeService {
         batchSaveGrades(java.util.Collections.singletonList(dto), teacher);
     }
 
+    /**
+     * 批量保存成绩（教师用）
+     */
+    @Transactional
+    @CacheEvict(value = {"studentGrades", "courseGrades"}, allEntries = true)
     public void batchSaveGrades(List<GradeBatchDTO> gradeList, User teacher) {
         if (gradeList == null || gradeList.isEmpty()) {
             return;
