@@ -47,5 +47,5 @@ spring:
 
 ## 五、其他
 + 维护人列表：fengyuan404
-+ 联系方式：3308099053@qq.com
++ 联系方式：YouFull@163.com
 
