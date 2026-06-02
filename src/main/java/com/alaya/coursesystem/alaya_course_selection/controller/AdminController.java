@@ -30,7 +30,6 @@ public class AdminController {
 
     // ==================== 用户管理 ====================
 
-    /** 分页查询用户（关键词+角色筛选） */
     @GetMapping("/users")
     public ResponseEntity<ApiResponse> getUsers(
             @RequestParam(defaultValue = "1") Integer pageNum,
@@ -38,12 +37,10 @@ public class AdminController {
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) String role) {
         Page<User> page = userService.getUsersPage(keyword, role, pageNum, pageSize);
-        // 脱敏：清除密码
         page.getContent().forEach(u -> u.setPassword(null));
         return ResponseEntity.ok(ApiResponse.success(PageResponseVO.from(page)));
     }
 
-    /** 新增用户 */
     @PostMapping("/users")
     public ResponseEntity<ApiResponse> createUser(@RequestBody User user) {
         User created = userService.createUser(user);
@@ -51,7 +48,6 @@ public class AdminController {
         return ResponseEntity.ok(ApiResponse.success(created));
     }
 
-    /** 编辑用户 */
     @PutMapping("/users/{id}")
     public ResponseEntity<ApiResponse> updateUser(@PathVariable Long id, @RequestBody User user) {
         User updated = userService.updateUser(id, user);
@@ -59,7 +55,6 @@ public class AdminController {
         return ResponseEntity.ok(ApiResponse.success(updated));
     }
 
-    /** 删除用户 */
     @DeleteMapping("/users/{id}")
     public ResponseEntity<ApiResponse> deleteUser(@PathVariable Long id, Authentication auth) {
         User currentUser = (User) auth.getPrincipal();
@@ -70,7 +65,6 @@ public class AdminController {
         return ResponseEntity.ok(ApiResponse.success("用户删除成功"));
     }
 
-    /** 重置用户密码 */
     @PostMapping("/users/{id}/reset-pwd")
     public ResponseEntity<ApiResponse> resetPassword(@PathVariable Long id) {
         userService.resetPassword(id);
@@ -97,11 +91,16 @@ public class AdminController {
 
         List<Course> allCourses = courseService.getAllCourses();
 
-        // 筛选
+        // 筛选：学期用 contains 模糊匹配，兼容不同格式
         List<Course> filtered = new ArrayList<>();
         for (Course c : allCourses) {
-            if (semester != null && !semester.isEmpty() && !semester.equals(c.getSemester())) continue;
-            if (teacherId != null && (c.getTeacher() == null || !teacherId.equals(c.getTeacher().getId()))) continue;
+            if (semester != null && !semester.isEmpty()
+                    && (c.getSemester() == null || !c.getSemester().contains(semester))) {
+                continue;
+            }
+            if (teacherId != null && (c.getTeacher() == null || !teacherId.equals(c.getTeacher().getId()))) {
+                continue;
+            }
             filtered.add(c);
         }
 
@@ -109,22 +108,22 @@ public class AdminController {
         List<CourseStatVO.CourseStatItem> items = new ArrayList<>();
         long totalSelected = 0;
         long hotCourseCount = 0;
-        int totalCapacity = 0;
 
         for (Course c : filtered) {
             long selectedCount = selectionRepository.countByCourseAndStatus(c, "SELECTED");
             CourseStatVO.CourseStatItem item = new CourseStatVO.CourseStatItem();
             item.setName(c.getName());
-            item.setTeacherName(c.getTeacher() != null ? c.getTeacher().getUsername() : "");
+            item.setTeacher(new CourseStatVO.TeacherInfo(
+                    c.getTeacher() != null ? c.getTeacher().getUsername() : ""));
             item.setCredits(c.getCredits());
             item.setCapacity(c.getCapacity());
             item.setSelectedCount(selectedCount);
-            item.setSelectedRate(c.getCapacity() > 0 ? Math.round(selectedCount * 1000.0 / c.getCapacity()) / 10.0 : 0);
+            item.setSelectedRate(c.getCapacity() > 0
+                    ? Math.round(selectedCount * 1000.0 / c.getCapacity()) / 10.0 : 0);
             item.setSemester(c.getSemester());
             items.add(item);
 
             totalSelected += selectedCount;
-            totalCapacity += c.getCapacity();
             if (c.getCapacity() > 0 && selectedCount >= c.getCapacity()) {
                 hotCourseCount++;
             }
@@ -134,13 +133,15 @@ public class AdminController {
         long total = items.size();
         int fromIndex = (pageNum - 1) * pageSize;
         int toIndex = Math.min(fromIndex + pageSize, items.size());
-        List<CourseStatVO.CourseStatItem> pagedItems = fromIndex < items.size() ? items.subList(fromIndex, toIndex) : new ArrayList<>();
+        List<CourseStatVO.CourseStatItem> pagedItems = fromIndex < items.size()
+                ? items.subList(fromIndex, toIndex) : new ArrayList<>();
 
         // 汇总
         CourseStatVO.StatSummary summary = new CourseStatVO.StatSummary();
         summary.setTotalCourse(filtered.size());
         summary.setTotalSelected(totalSelected);
-        summary.setAverageSelected(filtered.isEmpty() ? 0 : Math.round(totalSelected * 10.0 / filtered.size()) / 10.0);
+        summary.setAverageSelected(filtered.isEmpty()
+                ? 0 : Math.round(totalSelected * 10.0 / filtered.size()) / 10.0);
         summary.setHotCourseCount(hotCourseCount);
 
         CourseStatVO vo = new CourseStatVO();
@@ -159,7 +160,8 @@ public class AdminController {
                 + "\u5BFC\u51FA\u529F\u80FD\u5F85\u5B9E\u73B0,,,,,\n";
         byte[] bytes = csv.getBytes(java.nio.charset.StandardCharsets.UTF_8);
         return ResponseEntity.ok()
-                .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+                .contentType(MediaType.parseMediaType(
+                        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
                 .header("Content-Disposition", "attachment; filename=course_stat.xlsx")
                 .body(bytes);
     }

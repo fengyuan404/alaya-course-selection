@@ -5,8 +5,11 @@ import com.alaya.coursesystem.alaya_course_selection.entity.Course;
 import com.alaya.coursesystem.alaya_course_selection.entity.CourseSelection;
 import com.alaya.coursesystem.alaya_course_selection.exception.UnifiedExceptionHandler;
 import com.alaya.coursesystem.alaya_course_selection.repository.CourseRepository;
-import com.alaya.coursesystem.alaya_course_selection.repository.CourseSelectionRepository;`r`nimport com.alaya.coursesystem.alaya_course_selection.repository.GradeRepository;
+import com.alaya.coursesystem.alaya_course_selection.repository.CourseSelectionRepository;
+import com.alaya.coursesystem.alaya_course_selection.repository.GradeRepository;
+
 import com.alaya.coursesystem.alaya_course_selection.vo.PageResponseVO;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
@@ -24,7 +27,7 @@ import java.util.List;
 public class CourseService {
 
     private final CourseRepository courseRepository;
-    private final CourseSelectionRepository selectionRepository;`r`n    private final GradeRepository gradeRepository;
+    private final CourseSelectionRepository selectionRepository;  private final GradeRepository gradeRepository;
 
     // 优化：使用分页工具类替换原有分页方法
     //@Cacheable(value = "courseList", key = "'all_' + #pageRequest.pageNum + '_' + #pageRequest.pageSize")

@@ -20,11 +20,17 @@ public class CourseStatVO {
     @Data
     public static class CourseStatItem {
         private String name;
-        private String teacherName;
+        private TeacherInfo teacher;
         private int credits;
         private int capacity;
         private long selectedCount;
         private double selectedRate;
         private String semester;
+    }
+
+    @Data
+    public static class TeacherInfo {
+        private String username;
+        public TeacherInfo(String username) { this.username = username; }
     }
 }
