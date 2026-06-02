@@ -90,13 +90,25 @@ public class StudentCourseController {
         PageResponseVO<Course> coursePage = courseService.getAllCoursesByPage(pageRequest);
 
         // 为每个课程填充 selectedCount 和 alreadySelected
-        User currentUser = (User) org.springframework.security.core.context.SecurityContextHolder
-                .getContext().getAuthentication().getPrincipal();
-        for (Course course : coursePage.getList()) {
-            long count = selectionRepository.countByCourseAndStatus(course, "SELECTED");
-            course.setSelectedCount((int) count);
-            boolean selected = selectionRepository.findByUserAndCourse(currentUser, course).isPresent();
-            course.setAlreadySelected(selected);
+        org.springframework.security.core.Authentication auth = org.springframework.security.core.context
+                .SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null && auth.getPrincipal() instanceof User currentUser) {
+            for (Course course : coursePage.getList()) {
+                long count = selectionRepository.countByCourseAndStatus(course, "SELECTED");
+                course.setSelectedCount((int) count);
+                // 只查 SELECTED 状态的选课记录，避免已退课程误判
+                java.util.Optional<com.alaya.coursesystem.alaya_course_selection.entity.CourseSelection> sel =
+                    selectionRepository.findByUserAndCourse(currentUser, course);
+                boolean selected = sel.isPresent() && "SELECTED".equals(sel.get().getStatus());
+                course.setAlreadySelected(selected);
+            }
+        } else {
+            // 未认证时只填充 selectedCount
+            for (Course course : coursePage.getList()) {
+                long count = selectionRepository.countByCourseAndStatus(course, "SELECTED");
+                course.setSelectedCount((int) count);
+                course.setAlreadySelected(false);
+            }
         }
 
         // 统一引用ApiResponse，避免UnifiedExceptionHandler.ApiResponse冗余
