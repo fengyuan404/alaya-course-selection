@@ -94,6 +94,16 @@ public class TeacherController {
         return ResponseEntity.ok(ApiResponse.success(result));
     }
 
+    // 教师单条保存成绩
+    @PostMapping("/grades")
+    public ResponseEntity<ApiResponse> saveGrade(
+            @RequestBody GradeBatchDTO dto,
+            Authentication authentication) {
+        User teacher = (User) authentication.getPrincipal();
+        gradeService.saveGradeSingle(dto, teacher);
+        return ResponseEntity.ok(ApiResponse.success("成绩保存成功"));
+    }
+
     // 教师批量保存成绩
     @PostMapping("/grades/batch")
     public ResponseEntity<ApiResponse> batchSaveGrades(

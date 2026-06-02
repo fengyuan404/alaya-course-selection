@@ -131,6 +131,14 @@ public class GradeService {
      */
     @Transactional
     @CacheEvict(value = {"studentGrades", "courseGrades"}, allEntries = true)
+    /**
+     * 单条保存成绩（复用批量保存逻辑）
+     */
+    @Transactional
+    public void saveGradeSingle(GradeBatchDTO dto, User teacher) {
+        batchSaveGrades(java.util.Collections.singletonList(dto), teacher);
+    }
+
     public void batchSaveGrades(List<GradeBatchDTO> gradeList, User teacher) {
         if (gradeList == null || gradeList.isEmpty()) {
             return;
