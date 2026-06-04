@@ -80,8 +80,8 @@ public class SecurityConfig {
                         .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll()
 
                         .requestMatchers("/api/auth/register", "/api/auth/login", "/api/auth/logout", "/h2-console/**").permitAll()
-                        .requestMatchers("/api/student/**").hasRole("STUDENT")
-                        .requestMatchers(HttpMethod.GET, "/api/student/courses/**").permitAll() // 临时放行
+                        .requestMatchers(HttpMethod.GET, "/api/student/courses/**").permitAll()
+                        .requestMatchers("/api/student/**").hasRole("STUDENT") // 临时放行
                         .requestMatchers("/api/teacher/**").hasRole("TEACHER")
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated()

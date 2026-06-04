@@ -32,7 +32,6 @@ public class GradeService {
 
     // 录入/修改成绩
     @Transactional
-    @CacheEvict(value = {"studentGrades", "courseGrades"}, allEntries = true)
     public Grade saveGrade(Long selectionId, BigDecimal score, Grade.GradeLevel level, String comment, User teacher) {
         // 验证选课记录存在
         var selection = selectionRepository.findById(selectionId)
@@ -59,7 +58,6 @@ public class GradeService {
     }
 
     // 学生查询个人成绩
-    @Cacheable(value = "studentGrades", key = "#studentId")
     public List<Grade> getStudentGrades(Long studentId) {
         User student = userRepository.findById(studentId)
                 .orElseThrow(() -> new UnifiedExceptionHandler.BusinessException("学生不存在"));
@@ -67,7 +65,6 @@ public class GradeService {
     }
 
     // 教师查询课程成绩
-    @Cacheable(value = "courseGrades", key = "#courseId")
     public List<Grade> getCourseGrades(Long courseId, Long teacherId) {
         Course course = courseRepository.findById(courseId)
                 .orElseThrow(() -> new UnifiedExceptionHandler.BusinessException("课程不存在"));
@@ -138,7 +135,6 @@ public class GradeService {
      * 批量保存成绩（教师用）
      */
     @Transactional
-    @CacheEvict(value = {"studentGrades", "courseGrades"}, allEntries = true)
     public void batchSaveGrades(List<GradeBatchDTO> gradeList, User teacher) {
         if (gradeList == null || gradeList.isEmpty()) {
             return;
