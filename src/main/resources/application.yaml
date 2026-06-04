@@ -63,3 +63,6 @@ spring:
             # Session超时时间（可选，默认30分钟）
             timeout: 1800s
 
+# CORS 跨域配置（逗号分隔多个 origin）
+cors:
+  allowed-origins: http://localhost:5173

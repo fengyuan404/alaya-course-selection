@@ -2,6 +2,8 @@ package com.alaya.coursesystem.alaya_course_selection.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.beans.factory.annotation.Value;
+import java.util.Arrays;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.web.cors.CorsConfiguration;
@@ -13,11 +15,14 @@ import org.springframework.web.cors.CorsConfigurationSource;
 @Configuration
 public class CorsConfig {
 
+    @Value("${cors.allowed-origins:http://localhost:5173}")
+    private String allowedOrigins;
+
     // 新增：单独注册CorsConfigurationSource Bean（供SecurityConfig注入）
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.addAllowedOriginPattern("http://localhost:5173");
+        Arrays.stream(allowedOrigins.split(",")).map(String::trim).forEach(config::addAllowedOriginPattern);
         config.setAllowCredentials(true);
         config.addAllowedMethod("GET");
         config.addAllowedMethod("POST");
